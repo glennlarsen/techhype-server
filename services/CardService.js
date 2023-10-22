@@ -99,5 +99,133 @@ class CardService {
       data: createdCardUrl,
     };
   }
+
+  async updateCard(cardId, name, active) {
+    // Check that all fields are provided
+    if (!cardId) {
+      return {
+        success: false,
+        message: "cardId is required for the update.",
+      };
+    }
+
+    try {
+      // Check if the card exists
+      const existingCard = await this.Card.findOne({
+        where: { id: cardId },
+      });
+
+      if (!existingCard) {
+        return {
+          success: false,
+          message: "Card does not exist.",
+        };
+      }
+
+      // Define the fields to update
+      const updatedFields = {};
+
+      // Check if the name field is different
+      if (name && name !== existingCard.Name) {
+        updatedFields.Name = name;
+      }
+
+      // Check if the active field is different
+      if (active !== undefined && active !== existingCard.Active) {
+        updatedFields.Active = active;
+      }
+
+      // Check if no fields are different
+      if (Object.keys(updatedFields).length === 0) {
+        return {
+          success: false,
+          message: "No fields were changed.",
+        };
+      }
+
+      // Update the card details
+      const updatedCard = await this.Card.update(updatedFields, {
+        where: { id: cardId },
+      });
+
+      if (updatedCard[0] === 1) {
+        // The update was successful
+        return {
+          success: true,
+          message: "Card updated successfully",
+          updatedFields,
+        };
+      } else {
+        return {
+          success: false,
+          message: "Card update failed",
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: "An error occurred while updating the card",
+        error: error.message,
+      };
+    }
+  }
+
+  async deleteCard(cardId, userId) {
+    // Check that cardId is provided
+    if (!cardId) {
+      return {
+        success: false,
+        message: "cardId is required for deletion.",
+      };
+    }
+
+    try {
+      // Check if the card exists
+      const existingCard = await this.Card.findOne({
+        where: { id: cardId },
+      });
+
+      if (!existingCard) {
+        return {
+          success: false,
+          message: "Card does not exist.",
+        };
+      }
+
+      // Check if the card belongs to the user
+      if (existingCard.UserId !== userId) {
+        return {
+          success: false,
+          message: "This card does not belong to you.",
+        };
+      }
+
+      // Delete associated card profiles
+      await this.CardProfile.destroy({
+        where: { CardId: cardId },
+      });
+
+      // Delete associated CardUrls
+      await this.CardUrl.destroy({
+        where: { cardId: cardId },
+      });
+
+      // Delete the card
+      await this.Card.destroy({
+        where: { id: cardId },
+      });
+
+      return {
+        success: true,
+        message:  "Card, associated CardProfiles, and CardUrls deleted successfully.",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "An error occurred while deleting the card",
+        error: error.message,
+      };
+    }
+  }
 }
 module.exports = CardService;

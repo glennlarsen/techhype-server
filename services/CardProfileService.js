@@ -1,6 +1,6 @@
 const { Op } = require("sequelize");
 
-class CardService {
+class CardProfileService {
   constructor(db) {
     this.client = db.sequelize;
     this.User = db.User;
@@ -29,8 +29,12 @@ class CardService {
     };
   }
 
-  async create(data) {
+  // Function to retrieve a card profile by ID
+  async getProfileById(profileId) {
+    return this.CardProfile.findByPk(profileId);
+  }
 
+  async create(data) {
     const existingProfiles = await this.CardProfile.findAll({
       where: { CardId: data.cardId },
     });
@@ -101,6 +105,48 @@ class CardService {
       };
     }
   }
+
+  // Function to update a card profile
+  async update(profileId, data, imageUrl) {
+    try {
+      // Fetch the card profile
+      const profile = await this.getProfileById(profileId);
+
+      if (!profile) {
+        return {
+          success: false,
+          message: "Card profile not found.",
+        };
+      }
+
+      // Update the card profile data
+      profile.Name = data.name || profile.Name;
+      profile.Title = data.title || profile.Title;
+      profile.FirstName = data.firstName || profile.FirstName;
+      profile.LastName = data.lastName || profile.LastName;
+      profile.Image = imageUrl || profile.Image;
+      profile.Birthday = data.birthday || profile.Birthday;
+      profile.Phone = data.phone || profile.Phone;
+      profile.Email = data.email || profile.Email;
+      profile.Website = data.website || profile.Website;
+      profile.Website2 = data.website2 || profile.Website2;
+
+      // Save the updated card profile
+      await profile.save();
+
+      return {
+        success: true,
+        message: "Card profile updated successfully",
+        cardProfile: profile,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error updating card profile",
+        error: error.message,
+      };
+    }
+  }
 }
 
-module.exports = CardService;
+module.exports = CardProfileService;

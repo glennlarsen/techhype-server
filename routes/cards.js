@@ -39,36 +39,36 @@ router.get("/", isAuth, async (req, res, next) => {
 
 // GET endpoint to retrieve cardProfiles for a specific card and user.
 router.get("/:cardId", isAuth, async (req, res) => {
-    // #swagger.tags = ['CardProfile']
-    // #swagger.description = "Retrieve cardProfiles for a specific card."
-  
-    const cardId = req.params.cardId;
-    const userId = req.user?.id ?? 0;
-  
-    // Check if the card exists and belongs to the user
-    const card = await cardService.getOneById(cardId);
-  
-    if (!card.card) {
-      return res.jsend.fail({
-        statusCode: 404,
-        message: "This card does not exist.",
-      });
-    }
-    if (card.card.UserId !== userId) {
-      return res.jsend.fail({
-        statusCode: 401,
-        message: "This card does not belong to you.",
-      });
-    }
-  
-    // Retrieve all cardProfiles for the card
-    const cardProfiles = await cardProfileService.getAll(cardId);
-  
-    res.jsend.success({
-      statusCode: 200,
-      result: cardProfiles,
+  // #swagger.tags = ['CardProfile']
+  // #swagger.description = "Retrieve cardProfiles for a specific card."
+
+  const cardId = req.params.cardId;
+  const userId = req.user?.id ?? 0;
+
+  // Check if the card exists and belongs to the user
+  const card = await cardService.getOneById(cardId);
+
+  if (!card.card) {
+    return res.jsend.fail({
+      statusCode: 404,
+      message: "This card does not exist.",
     });
+  }
+  if (card.card.UserId !== userId) {
+    return res.jsend.fail({
+      statusCode: 401,
+      message: "This card does not belong to you.",
+    });
+  }
+
+  // Retrieve all cardProfiles for the card
+  const cardProfiles = await cardProfileService.getAll(cardId);
+
+  res.jsend.success({
+    statusCode: 200,
+    result: cardProfiles,
   });
+});
 
 // Add a new card the logged in user
 router.post("/", isAuth, async (req, res) => {
@@ -123,6 +123,90 @@ router.post("/", isAuth, async (req, res) => {
   }
 });
 
+// Update an existing card for the logged in user
+router.put("/:cardId", isAuth, async (req, res) => {
+  // #swagger.tags = ['Card']
+  // #swagger.description = "Update an existing card for the logged in user."
+  /* #swagger.parameters['body'] =  {
+        "name": "body",
+        "in": "body",
+        "schema": {
+          $ref: "#/definitions/Card"
+        }
+      }
+    */
+  const cardId = req.params.cardId;
+  const { name, active } = req.body;
+
+  try {
+    // Check if the card exists and belongs to the user
+    const card = await cardService.getOneById(cardId);
+
+    if (!card.card) {
+      return res.jsend.fail({
+        statusCode: 404,
+        message: "This card does not exist.",
+      });
+    }
+
+    // Optionally, you can add a check to ensure the card belongs to the user here.
+    // This depends on your specific requirements and how cards are associated with users.
+
+    // Update the card details
+    const updatedCard = await cardService.updateCard(cardId, name, active);
+
+    if (updatedCard.success) {
+      res.jsend.success({
+        statusCode: 200, // Use 200 for successful updates
+        result: updatedCard,
+      });
+    } else {
+      res.jsend.fail({
+        statusCode: 404,
+        message: updatedCard.message,
+        data: updatedCard.error,
+      });
+    }
+  } catch (error) {
+    res.jsend.error({
+      statusCode: 500,
+      message: "An error occurred while updating the card",
+      data: error.message,
+    });
+  }
+});
+
+// DELETE endpoint to delete a card
+router.delete("/:cardId", isAuth, async (req, res) => {
+  // #swagger.tags = ['Card']
+  // #swagger.description = "Delete a card and its associated card profiles."
+
+  const cardId = req.params.cardId;
+  const userId = req.user?.id ?? 0;
+
+  try {
+    const result = await cardService.deleteCard(cardId, userId);
+
+    if (result.success) {
+      res.jsend.success({
+        statusCode: 200,
+        message: "Card and associated card profiles deleted successfully.",
+      });
+    } else {
+      res.jsend.fail({
+        statusCode: 404,
+        message: result.message,
+      });
+    }
+  } catch (error) {
+    res.jsend.error({
+      statusCode: 500,
+      message: "An error occurred while deleting the card",
+      data: error.message,
+    });
+  }
+});
+
 // POST endpoint to add a new cardProfile to a card
 router.post("/:cardId", isAuth, uploadImage, async (req, res) => {
   // #swagger.tags = ['CardProfile']
@@ -150,8 +234,10 @@ router.post("/:cardId", isAuth, uploadImage, async (req, res) => {
   // Handle image upload success here
   const uploadedFiles = req.files;
 
+  console.log("uploaded files: ", uploadedFiles);
+
   // Extract image URL from uploadedFiles
-  const imageUrl = uploadedFiles[0].location; // Assuming a single image upload
+  const imageUrl = uploadedFiles[0]?.location; // Assuming a single image upload
 
   const {
     name,
@@ -185,20 +271,25 @@ router.post("/:cardId", isAuth, uploadImage, async (req, res) => {
     });
   }
 
-  // Create a new cardProfile with the obtained image URL
-  const newCardProfile = await cardProfileService.create({
+  // Create a new cardProfile with the obtained image URL if it exists
+  const newCardProfileData = {
     cardId,
     name,
     title,
     firstName,
     lastName,
-    imageUrl,
     birthday,
     phone,
     email,
     website,
     website2,
-  });
+  };
+
+  if (imageUrl) {
+    newCardProfileData.imageUrl = imageUrl;
+  }
+
+  const newCardProfile = await cardProfileService.create(newCardProfileData);
 
   // Check if there are any card profiles associated with the card
   const existingCardProfiles = await cardProfileService.getAll(cardId);
@@ -222,6 +313,65 @@ router.post("/:cardId", isAuth, uploadImage, async (req, res) => {
   }
 });
 
+// PUT endpoint to update a cardProfile
+router.put("/:cardId/:profileId", isAuth, uploadImage, async (req, res) => {
+  const cardId = req.params.cardId;
+  const profileId = req.params.profileId;
+  const userId = req.user?.id ?? 0;
 
+  try {
+    // Check if the card exists and belongs to the user
+    const card = await cardService.getOneById(cardId);
+
+    if (!card.card) {
+      return res.jsend.fail({
+        statusCode: 404,
+        message: "This card does not exist.",
+      });
+    }
+    if (card.card.UserId !== userId) {
+      return res.jsend.fail({
+        statusCode: 401,
+        message: "This card does not belong to you.",
+      });
+    }
+
+    const profile = await cardProfileService.getProfileById(profileId);
+
+    if (!profile) {
+      return res.jsend.fail({
+        statusCode: 404,
+        message: "Card profile not found.",
+      });
+    }
+
+    // Handle image upload success here
+    const uploadedFiles = req.files;
+
+    // Extract image URL from uploadedFiles
+    const imageUrl = uploadedFiles[0]?.location; // Assuming a single image upload
+
+    // Update the card profile
+    const updatedCardProfile = await cardProfileService.update(
+      profileId,
+      req.body,
+      imageUrl
+    );
+
+    if (updatedCardProfile.success) {
+      res.jsend.success({
+        statusCode: 200,
+        result: updatedCardProfile,
+      });
+    } else {
+      res.jsend.fail({
+        statusCode: 400,
+        result: updatedCardProfile,
+      });
+    }
+  } catch (error) {
+    res.jsend.error(error.message);
+  }
+});
 
 module.exports = router;
