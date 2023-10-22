@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 const isAuth = require("./middleware/isAuth");
 const generateCardUrl = require("./middleware/generateCardUrl");
+const uploadImage = require("./middleware/uploadImage");
 var db = require("../models");
 var CardService = require("../services/CardService");
 var cardService = new CardService(db);
@@ -11,7 +12,7 @@ var jsend = require("jsend");
 
 router.use(jsend.middleware);
 
-/* GET users listing. */
+// GET endpoint to retrieve Cards for a specific user
 router.get("/", isAuth, async (req, res, next) => {
   // #swagger.tags = ['Card']
   // #swagger.description = "get the users cards."
@@ -35,6 +36,39 @@ router.get("/", isAuth, async (req, res, next) => {
     });
   }
 });
+
+// GET endpoint to retrieve cardProfiles for a specific card and user.
+router.get("/:cardId", isAuth, async (req, res) => {
+    // #swagger.tags = ['CardProfile']
+    // #swagger.description = "Retrieve cardProfiles for a specific card."
+  
+    const cardId = req.params.cardId;
+    const userId = req.user?.id ?? 0;
+  
+    // Check if the card exists and belongs to the user
+    const card = await cardService.getOneById(cardId);
+  
+    if (!card.card) {
+      return res.jsend.fail({
+        statusCode: 404,
+        message: "This card does not exist.",
+      });
+    }
+    if (card.card.UserId !== userId) {
+      return res.jsend.fail({
+        statusCode: 401,
+        message: "This card does not belong to you.",
+      });
+    }
+  
+    // Retrieve all cardProfiles for the card
+    const cardProfiles = await cardProfileService.getAll(cardId);
+  
+    res.jsend.success({
+      statusCode: 200,
+      result: cardProfiles,
+    });
+  });
 
 // Add a new card the logged in user
 router.post("/", isAuth, async (req, res) => {
@@ -90,23 +124,11 @@ router.post("/", isAuth, async (req, res) => {
 });
 
 // POST endpoint to add a new cardProfile to a card
-router.post("/:cardId", isAuth, async (req, res) => {
+router.post("/:cardId", isAuth, uploadImage, async (req, res) => {
   // #swagger.tags = ['CardProfile']
   // #swagger.description = "Create a new cardProfile for a specific card."
 
   const cardId = req.params.cardId;
-  const {
-    name,
-    title,
-    firstName,
-    lastName,
-    image,
-    birthday,
-    phone,
-    email,
-    website,
-    website2,
-  } = req.body;
   const userId = req.user?.id ?? 0;
 
   // Check if the card exists and belongs to the user
@@ -125,28 +147,58 @@ router.post("/:cardId", isAuth, async (req, res) => {
     });
   }
 
+  // Handle image upload success here
+  const uploadedFiles = req.files;
+
+  // Extract image URL from uploadedFiles
+  const imageUrl = uploadedFiles[0].location; // Assuming a single image upload
+
+  const {
+    name,
+    title,
+    firstName,
+    lastName,
+    birthday,
+    phone,
+    email,
+    website,
+    website2,
+  } = req.body;
+
   // Check if a cardProfile with the same Name already exists for the card
-  const existingCardProfile = await cardProfileService.getByName(cardId, name);
-  if (existingCardProfile.card) {
+  if (name) {
+    const existingCardProfile = await cardProfileService.getByName(
+      cardId,
+      name
+    );
+    if (existingCardProfile.card) {
+      return res.jsend.fail({
+        statusCode: 404,
+        message:
+          "A cardProfile with the same Name already exists for this card.",
+      });
+    }
+  } else {
     return res.jsend.fail({
-      message: "A cardProfile with the same Name already exists for this card.",
+      statusCode: 404,
+      message: "Name is required",
     });
   }
 
-  // Create a new cardProfile
-  const newCardProfile = await cardProfileService.create(
+  // Create a new cardProfile with the obtained image URL
+  const newCardProfile = await cardProfileService.create({
     cardId,
     name,
     title,
     firstName,
     lastName,
-    image,
+    imageUrl,
     birthday,
     phone,
     email,
     website,
-    website2
-  );
+    website2,
+  });
 
   // Check if there are any card profiles associated with the card
   const existingCardProfiles = await cardProfileService.getAll(cardId);
@@ -157,44 +209,19 @@ router.post("/:cardId", isAuth, async (req, res) => {
   ) {
     await cardProfileService.updateActiveCardProfile(cardId, newCardProfile.id);
   }
-
-  res.jsend.success({
-    statusCode: 201,
-    result: newCardProfile,
-  });
-});
-
-// GET endpoint to retrieve cardProfiles for a specific card
-router.get("/:cardId", isAuth, async (req, res) => {
-  // #swagger.tags = ['CardProfile']
-  // #swagger.description = "Retrieve cardProfiles for a specific card."
-
-  const cardId = req.params.cardId;
-  const userId = req.user?.id ?? 0;
-
-  // Check if the card exists and belongs to the user
-  const card = await cardService.getOneById(cardId);
-
-  if (!card.card) {
-    return res.jsend.fail({
+  if (newCardProfile.success) {
+    res.jsend.success({
+      statusCode: 201,
+      result: newCardProfile,
+    });
+  } else {
+    res.jsend.fail({
       statusCode: 404,
-      message: "This card does not exist.",
+      result: newCardProfile,
     });
   }
-  if (card.card.UserId !== userId) {
-    return res.jsend.fail({
-      statusCode: 401,
-      message: "This card does not belong to you.",
-    });
-  }
-
-  // Retrieve all cardProfiles for the card
-  const cardProfiles = await cardProfileService.getAll(cardId);
-
-  res.jsend.success({
-    statusCode: 200,
-    result: cardProfiles,
-  });
 });
+
+
 
 module.exports = router;

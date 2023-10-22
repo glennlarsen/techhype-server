@@ -7,15 +7,15 @@ var path = require('path');
 // (this is how we create s3 instance in v3)
 const s3 = new S3Client({
     credentials: {
-        accessKeyId: process.env.ACCESS_KEY_ID, // store it in .env file to keep it safe
-        secretAccessKey: process.env.SECRET_ACCESS_KEY
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID, // store it in .env file to keep it safe
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
     },
-    region: "eu-north-1" // this is the region that you select in AWS account
+    region: process.env.AWS_REGION // this is the region that you select in AWS account
 });
 
 const s3Storage = multerS3({
   s3: s3, // s3 instance
-  bucket: "techhype-bucket", // Amazon s3 bucket name
+  bucket: process.env.AWS_BUCKET_NAME, // Amazon s3 bucket name
   acl: "public-read", // storage access type
   metadata: (req, file, cb) => {
       cb(null, {fieldname: file.fieldname})
@@ -56,6 +56,6 @@ const uploadImage = multer({
   limits: {
       fileSize: 1024 * 1024 * 2 // 2mb file size
   }
-}).array("fileUrls", 10); // "images" is the field name for your images in the form data, and 5 is the maximum number of files allowed.
+}).array("image", 10); // "images" is the field name for your images in the form data, and 10 is the maximum number of files allowed.
 
 module.exports = uploadImage;

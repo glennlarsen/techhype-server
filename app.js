@@ -3,9 +3,6 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var passport = require('passport');
-var session = require('express-session');
-var SQLiteStore = require('connect-sqlite3')(session);
 var db = require("./models");
 db.sequelize.sync({ force: false })
 
@@ -25,14 +22,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use(session({
-  secret: 'random text',
-  resave: false,
-  saveUninitialized: false,
-  store: new SQLiteStore()
-}));
-app.use(passport.authenticate('session'));
 
 app.use('/', indexRouter);
 app.use('/auth', authRouter);

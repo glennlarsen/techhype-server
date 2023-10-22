@@ -29,34 +29,30 @@ class CardService {
     };
   }
 
-  async create(
-    cardId,
-    name,
-    title,
-    firstName,
-    lastName,
-    image,
-    birthday,
-    phone,
-    email,
-    website,
-    website2
-  ) {
+  async create(data) {
+
     const existingProfiles = await this.CardProfile.findAll({
-      where: { CardId: cardId },
+      where: { CardId: data.cardId },
     });
+
+    if (!data.name) {
+      return {
+        success: false,
+        message: "Name is required.",
+      };
+    }
     const cardProfile = await this.CardProfile.create({
-      CardId: cardId,
-      Name: name,
-      Title: title,
-      FirstName: firstName,
-      LastName: lastName,
-      Image: image,
-      Birthday: birthday,
-      Phone: phone,
-      Email: email,
-      Website: website,
-      Website2: website2,
+      Name: data.name,
+      Title: data.title,
+      FirstName: data.firstName,
+      LastName: data.lastName,
+      Image: data.imageUrl,
+      Birthday: data.birthday,
+      Phone: data.phone,
+      Email: data.email,
+      Website: data.website,
+      Website2: data.website2,
+      CardId: data.cardId,
     });
 
     if (existingProfiles.length === 0) {
@@ -78,15 +74,21 @@ class CardService {
   async updateActiveCardProfile(cardId, cardProfileId) {
     try {
       // First, deactivate all card profiles for the given card
-      await this.CardProfile.update({ Active: false }, {
-        where: { CardId: cardId },
-      });
-  
+      await this.CardProfile.update(
+        { Active: false },
+        {
+          where: { CardId: cardId },
+        }
+      );
+
       // Then, set the specified card profile as active
-      await this.CardProfile.update({ Active: true }, {
-        where: { id: cardProfileId },
-      });
-  
+      await this.CardProfile.update(
+        { Active: true },
+        {
+          where: { id: cardProfileId },
+        }
+      );
+
       return {
         success: true,
         message: "Active card profile updated successfully",
