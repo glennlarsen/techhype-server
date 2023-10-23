@@ -22,22 +22,19 @@ module.exports = (sequelize, Sequelize) => {
   CardProfile.associate = function (models) {
     CardProfile.belongsTo(models.Card, { foreignKey: "CardId" });
 
-    // Associations with new models
-    CardProfile.belongsToMany(models.User, {
-      through: "UserCardProfile", // Junction table name
-      foreignKey: "CardProfileId",
-    });
-
     CardProfile.hasOne(models.SocialMedia, {
       foreignKey: "CardProfileId",
+      onDelete: "CASCADE", // This ensures that when a CardProfile is deleted, the associated Address is also deleted
     });
 
     CardProfile.hasOne(models.Address, {
       foreignKey: "CardProfileId",
+      onDelete: "CASCADE", // This ensures that when a CardProfile is deleted, the associated Address is also deleted
     });
 
     CardProfile.hasOne(models.WorkInfo, {
       foreignKey: "CardProfileId",
+      onDelete: "CASCADE", // This ensures that when a CardProfile is deleted, the associated Address is also deleted
     });
   };
 

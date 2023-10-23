@@ -18,8 +18,11 @@ module.exports = (sequelize, Sequelize) => {
   );
   Card.associate = function (models) {
     Card.belongsTo(models.User, { foreignKey: "UserId" });
-    Card.hasMany(models.CardProfile, { foreignKey: "CardId" });
-    Card.hasOne(models.CardUrl, { foreignKey: "cardId" });
+    Card.hasMany(models.CardProfile, {
+      foreignKey: "CardId",
+      onDelete: "CASCADE",
+    });
+    Card.hasOne(models.CardUrl, { foreignKey: "cardId", onDelete: "CASCADE" });
   };
 
   return Card;

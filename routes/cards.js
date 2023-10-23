@@ -374,4 +374,61 @@ router.put("/:cardId/:profileId", isAuth, uploadImage, async (req, res) => {
   }
 });
 
+// DELETE endpoint to delete a card profile
+router.delete("/:cardId/:profileId", isAuth, async (req, res) => {
+    // #swagger.tags = ['CardProfile']
+    // #swagger.description = "Delete a card profile for a specific card."
+  
+    const cardId = req.params.cardId;
+    const profileId = req.params.profileId;
+    const userId = req.user?.id ?? 0;
+  
+    try {
+      // Check if the card exists and belongs to the user
+      const card = await cardService.getOneById(cardId);
+
+      console.log("card: ", card.card);
+  
+      if (!card.card) {
+        return res.jsend.fail({
+          statusCode: 404,
+          message: "This card does not exist.",
+        });
+      }
+      if (card.card.UserId !== userId) {
+        return res.jsend.fail({
+          statusCode: 401,
+          message: "This card does not belong to you.",
+        });
+      }
+  
+      const profile = await cardProfileService.getProfileById(profileId);
+  
+      if (!profile) {
+        return res.jsend.fail({
+          statusCode: 404,
+          message: "Card profile not found.",
+        });
+      }
+  
+      // Delete the card profile
+      const result = await cardProfileService.delete(profileId);
+  
+      if (result.success) {
+        res.jsend.success({
+          statusCode: 200,
+          message: "Card profile deleted successfully.",
+        });
+      } else {
+        res.jsend.fail({
+          statusCode: 400,
+          message: result.message,
+        });
+      }
+    } catch (error) {
+      res.jsend.error(error.message);
+    }
+  });
+  
+
 module.exports = router;

@@ -4,19 +4,34 @@ class UserService {
   constructor(db) {
     this.client = db.sequelize;
     this.User = db.User;
+    this.Token = db.Token;
     this.Card = db.Card;
     this.CardProfile = db.CardProfile;
   }
 
-  async create(firstName, lastName, email, encryptedPassword, salt) {
-    return this.User.create({
+  async create(firstName, lastName, email, encryptedPassword, salt, verificationToken, expirationTime) {
+    // First, create a new user
+    const user = await this.User.create({
       FirstName: firstName,
       LastName: lastName,
       Email: email,
       EncryptedPassword: encryptedPassword,
       Salt: salt,
     });
+  
+    // Now, create a corresponding verification token and associate it with the user
+    const token = await this.Token.create({
+      UserId: user.id, // Associate the token with the user
+      Token: verificationToken,
+      Expiration: expirationTime,
+    });
+  
+    // You can add error handling here to make sure both user and token creation were successful
+  
+    // Return the user (or other relevant information) if needed
+    return user;
   }
+  
 
   async getAll() {
     return this.User.findAll({

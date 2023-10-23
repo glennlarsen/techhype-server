@@ -56,9 +56,14 @@ router.post("/login", jsonParser, async (req, res, next) => {
         let token;
         try {
           token = jwt.sign(
-            { id: data.id, email: data.Email, role: data.Role, name: data.FirstName },
+            {
+              id: data.id,
+              email: data.Email,
+              role: data.Role,
+              name: data.FirstName,
+            },
             process.env.TOKEN_SECRET,
-            { expiresIn: "1h" }
+            { expiresIn: process.env.JWT_EXPIRATION }
           );
         } catch (err) {
           res.jsend.error("Something went wrong with creating JWT token");
@@ -89,6 +94,9 @@ router.post("/signup", async (req, res, next) => {
     }
   */
   const { firstName, lastName, email, password } = req.body;
+  // Generate a random salt
+  const salt = crypto.randomBytes(16);
+
   const missingAttributes = [];
 
   if (firstName == null) {
@@ -119,19 +127,43 @@ router.post("/signup", async (req, res, next) => {
       email: "Provided email is already in use.",
     });
   }
-  var salt = crypto.randomBytes(16);
+  // Generate a verification token
+  const verificationToken = crypto.randomBytes(32).toString("hex");
+  // Calculate the expiration time (e.g., 24 hours from now)
+  const expirationTime = new Date();
+  expirationTime.setHours(expirationTime.getHours() + 24); // Adjust the duration as needed
+
+  // Hash the password and create a user record with the verification token
   crypto.pbkdf2(
     password,
     salt,
     310000,
     32,
     "sha256",
-    function (err, hashedPassword) {
+    async (err, hashedPassword) => {
       if (err) {
         return next(err);
       }
-      userService.create(firstName, lastName, email, hashedPassword, salt);
-      res.jsend.success({ result: "You created an account." });
+
+      // Create a new user record with the verification token
+      const user = await userService.create(
+        firstName,
+        lastName,
+        email,
+        hashedPassword,
+        salt,
+        verificationToken,
+        expirationTime
+      );
+
+      // Send an email to the user with a link containing the verification token
+      // This step is specific to your email service and needs to be implemented separately.
+
+      // Return a success response
+      res.jsend.success({
+        result:
+          "You created an account. Please check your email for verification instructions.",
+      });
     }
   );
 });

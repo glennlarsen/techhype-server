@@ -10,6 +10,9 @@ var indexRouter = require('./routes/index');
 var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
 var cardsRouter = require('./routes/cards');
+var AddressRouter = require('./routes/address');
+var WorkInfoRouter = require('./routes/workInfo');
+var SocialMediaRouter = require('./routes/socialMedia');
 
 var app = express();
 
@@ -27,6 +30,9 @@ app.use('/', indexRouter);
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
+app.use('/address', AddressRouter);
+app.use('/workInfo', WorkInfoRouter);
+app.use('/socialMedia', SocialMediaRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

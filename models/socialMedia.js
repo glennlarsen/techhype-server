@@ -6,6 +6,10 @@ module.exports = (sequelize, Sequelize) => {
       LinkedinLink: Sequelize.DataTypes.STRING,
       SnapLink: Sequelize.DataTypes.STRING,
       InstagramLink: Sequelize.DataTypes.STRING,
+      CardProfileId: {
+        type: Sequelize.DataTypes.INTEGER,
+        unique: true, // Add a unique constraint to ensure only one SocialMedia entry per CardProfile
+      },
     },
     {
       timestamps: false,

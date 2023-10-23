@@ -147,6 +147,39 @@ class CardProfileService {
       };
     }
   }
+
+  async delete(profileId) {
+    try {
+      // Fetch the card profile by ID
+      const profile = await this.getProfileById(profileId);
+
+      if (!profile) {
+        return {
+          success: false,
+          message: "Card profile not found.",
+        };
+      }
+
+      // Delete the associated address (if it exists)
+      if (profile.Address) {
+        await profile.Address.destroy();
+      }
+
+      // Delete the card profile
+      await profile.destroy();
+
+      return {
+        success: true,
+        message: "Card profile deleted successfully",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error deleting card profile",
+        error: error.message,
+      };
+    }
+  }
 }
 
 module.exports = CardProfileService;

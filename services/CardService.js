@@ -200,16 +200,6 @@ class CardService {
         };
       }
 
-      // Delete associated card profiles
-      await this.CardProfile.destroy({
-        where: { CardId: cardId },
-      });
-
-      // Delete associated CardUrls
-      await this.CardUrl.destroy({
-        where: { cardId: cardId },
-      });
-
       // Delete the card
       await this.Card.destroy({
         where: { id: cardId },
