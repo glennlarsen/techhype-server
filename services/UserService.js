@@ -1,4 +1,5 @@
 const { Op } = require("sequelize");
+const Sequelize = require("sequelize");
 
 class UserService {
   constructor(db) {
@@ -9,7 +10,15 @@ class UserService {
     this.CardProfile = db.CardProfile;
   }
 
-  async create(firstName, lastName, email, encryptedPassword, salt, verificationToken, expirationTime) {
+  async create(
+    firstName,
+    lastName,
+    email,
+    encryptedPassword,
+    salt,
+    verificationToken,
+    expirationTime
+  ) {
     // First, create a new user
     const user = await this.User.create({
       FirstName: firstName,
@@ -18,20 +27,19 @@ class UserService {
       EncryptedPassword: encryptedPassword,
       Salt: salt,
     });
-  
+
     // Now, create a corresponding verification token and associate it with the user
     const token = await this.Token.create({
       UserId: user.id, // Associate the token with the user
       Token: verificationToken,
       Expiration: expirationTime,
     });
-  
+
     // You can add error handling here to make sure both user and token creation were successful
-  
+
     // Return the user (or other relevant information) if needed
     return user;
   }
-  
 
   async getAll() {
     return this.User.findAll({
@@ -60,7 +68,7 @@ class UserService {
 
       return {
         success: true,
-        user
+        user,
       };
     } catch (error) {
       // You can handle the error here or re-throw it
@@ -86,6 +94,25 @@ class UserService {
         },
       },
     });
+  }
+
+  async verifyToken(token) {
+    // Find the token in the Token table
+    const tokenRecord = await this.Token.findOne({
+      where: {
+        Token: token,
+        Expiration: {
+          [Sequelize.Op.gt]: new Date(),
+        },
+      },
+      include: [{ model: this.User, where: { Verified: false } }],
+    });
+
+    if (tokenRecord) {
+      return tokenRecord.User; // Return the associated user
+    } else {
+      return null; // Token not found or has expired
+    }
   }
 }
 module.exports = UserService;

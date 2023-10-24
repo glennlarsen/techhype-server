@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 var crypto = require("crypto");
+var transporter = require("./middleware/nodemailer");
 var db = require("../models");
 var jsend = require("jsend");
 var UserService = require("../services/UserService");
@@ -156,16 +157,63 @@ router.post("/signup", async (req, res, next) => {
         expirationTime
       );
 
-      // Send an email to the user with a link containing the verification token
-      // This step is specific to your email service and needs to be implemented separately.
+      // Send a verification email to the user
+      const mailOptions = {
+        from: "glenn@techhype.no", // Sender's email address
+        to: email, // Recipient's email address (user's email)
+        subject: "Email Verification",
+        html: `
+        <p>Thank you for signing up! To verify your email, please click the button below:</p>
+        <a href="http://localhost:3000/auth/verify/${verificationToken}" style="text-decoration: none;">
+          <button style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            Verify Email
+          </button>
+        </a>        
+      `,
+      };
 
-      // Return a success response
-      res.jsend.success({
-        result:
-          "You created an account. Please check your email for verification instructions.",
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Email verification error:", error);
+          // Handle the email sending error here (e.g., return an error response to the user)
+        } else {
+          console.log("Email verification sent:", info.response);
+          // Return a success response to the user
+          res.jsend.success({
+            result:
+              "You created an account. Please check your email for verification instructions.",
+          });
+        }
       });
     }
   );
+});
+
+// Create a route for email verification
+router.get("/verify/:token", async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    // Call the verifyToken function to verify the token
+    const user = await userService.verifyToken(token);
+
+    if (user) {
+      // Update the user's "Verified" field to mark the email as verified
+      await user.update({ Verified: true });
+
+      // You can add a success response or redirection to a login page here
+      res.jsend.success({
+        result: "Email verified successfully. You can now log in.",
+      });
+    } else {
+      // Token is invalid or has expired
+      res.jsend.fail({ statusCode: 400, message: "Invalid or expired token" });
+    }
+  } catch (error) {
+    console.error("Email verification error:", error);
+    // Handle the error (e.g., return an error response)
+    res.jsend.error("Email verification failed");
+  }
 });
 
 module.exports = router;
