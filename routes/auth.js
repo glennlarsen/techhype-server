@@ -163,23 +163,32 @@ router.post("/signup", async (req, res, next) => {
         to: email, // Recipient's email address (user's email)
         subject: "Email Verification",
         html: `
-        <p>Thank you for signing up! To verify your email, please click the button below:</p>
-        <a href="http://localhost:3000/auth/verify/${verificationToken}" style="text-decoration: none;">
-          <button style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
-            Verify Email
-          </button>
-        </a>        
-      `,
+          <table width="100%" cellspacing="0" cellpadding="0">
+            <tr>
+              <td align="center">
+                <h1 style="color: black;">Thank you for signing up on Techhype!</h1>
+                <p style="color: black;">To verify your email, please click the button below:</p>
+                <a href="http://localhost:3000/auth/verify/${verificationToken}" style="text-decoration: none; background-color: #54d4c6; color: black; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; display: inline-block; font-weight: bold;">
+                  Verify Email
+                </a>
+              </td>
+            </tr>
+          </table>
+        `, // Design the verification email in this HTML
       };
 
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.error("Email verification error:", error);
-          // Handle the email sending error here (e.g., return an error response to the user)
+          res.jsend.fail({
+            statusCode: 401,
+            result: error,
+          });
         } else {
           console.log("Email verification sent:", info.response);
           // Return a success response to the user
           res.jsend.success({
+            statusCode: 201,
             result:
               "You created an account. Please check your email for verification instructions.",
           });
@@ -194,25 +203,25 @@ router.get("/verify/:token", async (req, res) => {
   const { token } = req.params;
 
   try {
-    // Call the verifyToken function to verify the token
     const user = await userService.verifyToken(token);
 
-    if (user) {
-      // Update the user's "Verified" field to mark the email as verified
-      await user.update({ Verified: true });
-
-      // You can add a success response or redirection to a login page here
-      res.jsend.success({
-        result: "Email verified successfully. You can now log in.",
-      });
-    } else {
+    if (!user) {
       // Token is invalid or has expired
-      res.jsend.fail({ statusCode: 400, message: "Invalid or expired token" });
+      return res.jsend.fail({
+        statusCode: 400,
+        message: "Invalid token, expired token or already verified email.",
+      });
     }
+
+    // Update the user's "Verified" field to mark the email as verified
+    await user.update({ Verified: true });
+
+    return res.jsend.success({
+      result: "Email verified successfully. You can now log in.",
+    });
   } catch (error) {
     console.error("Email verification error:", error);
-    // Handle the error (e.g., return an error response)
-    res.jsend.error("Email verification failed");
+    return res.jsend.error("Email verification failed");
   }
 });
 
