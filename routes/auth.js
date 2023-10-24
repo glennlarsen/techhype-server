@@ -15,14 +15,13 @@ router.use(jsend.middleware);
 // Post for registered users to be able to login
 router.post("/login", jsonParser, async (req, res, next) => {
   // #swagger.tags = ['Auth']
-  // #swagger.description = "Logs the user to the application. Both email and password needed to be correct. After successful login, the JWT token is returned - use it later in the Authorization header to access the other endpoints"
+  // #swagger.description = "Logs the user into the application. Both email and password must be correct. After successful login, the JWT token is returned - use it later in the Authorization header to access other endpoints."
   /* #swagger.parameters['body'] =  {
     "name": "body",
     "in": "body",
       "schema": {
         $ref: "#/definitions/UserLogin"
       }
-    }
   */
   const { email, password } = req.body;
   if (email == null) {
@@ -34,52 +33,69 @@ router.post("/login", jsonParser, async (req, res, next) => {
       password: "Password is required.",
     });
   }
-  await userService.getOneByEmail(email).then((data) => {
-    if (data === null) {
-      return res.jsend.fail({
-        statusCode: 400,
-        result: "Incorrect email or password",
+
+  // Retrieve the user by email
+  const user = await userService.getOneByEmail(email);
+
+  if (!user) {
+    return res.jsend.fail({
+      statusCode: 400,
+      result: "Incorrect email or password",
+    });
+  }
+
+  // Check if the user is verified
+  if (!user.Verified) {
+    return res.jsend.fail({
+      statusCode: 400,
+      result:
+        "User is not verified. Please check your email for the verification link.",
+    });
+  }
+
+  // Verify the password
+  crypto.pbkdf2(
+    password,
+    user.Salt,
+    310000,
+    32,
+    "sha256",
+    function (err, hashedPassword) {
+      if (err) {
+        return cb(err);
+      }
+      if (!crypto.timingSafeEqual(user.EncryptedPassword, hashedPassword)) {
+        return res.jsend.fail({ result: "Incorrect email or password" });
+      }
+      let token;
+      try {
+        token = jwt.sign(
+          {
+            id: user.id,
+            email: user.Email,
+            role: user.Role,
+            Verified: user.Verified,
+            name: user.FirstName,
+          },
+          process.env.TOKEN_SECRET,
+          { expiresIn: process.env.JWT_EXPIRATION }
+        );
+      } catch (err) {
+        return res.jsend.error(
+          "Something went wrong with creating the JWT token"
+        );
+      }
+      return res.jsend.success({
+        result: "You are logged in",
+        id: user.id,
+        email: user.Email,
+        name: user.FirstName,
+        role: user.Role,
+        verified: user.Verified,
+        token: token,
       });
     }
-    crypto.pbkdf2(
-      password,
-      data.Salt,
-      310000,
-      32,
-      "sha256",
-      function (err, hashedPassword) {
-        if (err) {
-          return cb(err);
-        }
-        if (!crypto.timingSafeEqual(data.EncryptedPassword, hashedPassword)) {
-          return res.jsend.fail({ result: "Incorrect email or password" });
-        }
-        let token;
-        try {
-          token = jwt.sign(
-            {
-              id: data.id,
-              email: data.Email,
-              role: data.Role,
-              name: data.FirstName,
-            },
-            process.env.TOKEN_SECRET,
-            { expiresIn: process.env.JWT_EXPIRATION }
-          );
-        } catch (err) {
-          res.jsend.error("Something went wrong with creating JWT token");
-        }
-        res.jsend.success({
-          result: "You are logged in",
-          id: data.id,
-          email: data.Email,
-          name: data.FirstName,
-          role: data.Role,
-          token: token,
-        });
-      }
-    );
-  });
+  );
 });
 
 // Post for new users to register / signup
@@ -159,9 +175,9 @@ router.post("/signup", async (req, res, next) => {
 
       // Send a verification email to the user
       const mailOptions = {
-        from: "glenn@techhype.no", // Sender's email address
+        from: process.env.NODEMAILER_USER, // Sender's email address
         to: email, // Recipient's email address (user's email)
-        subject: "Email Verification",
+        subject: "Email Verification - Techhype",
         html: `
           <table width="100%" cellspacing="0" cellpadding="0">
             <tr>
