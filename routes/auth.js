@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 var crypto = require("crypto");
 var transporter = require("./middleware/nodemailer");
+var authLimiter = require("./middleware/authLimiter");
 var db = require("../models");
 var jsend = require("jsend");
 var UserService = require("../services/UserService");
@@ -13,7 +14,7 @@ var jwt = require("jsonwebtoken");
 router.use(jsend.middleware);
 
 // Post for registered users to be able to login
-router.post("/login", jsonParser, async (req, res, next) => {
+router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
   // #swagger.tags = ['Auth']
   // #swagger.description = "Logs the user into the application. Both email and password must be correct. After successful login, the JWT token is returned - use it later in the Authorization header to access other endpoints."
   /* #swagger.parameters['body'] =  {
