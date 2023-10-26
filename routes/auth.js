@@ -23,6 +23,7 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
       "schema": {
         $ref: "#/definitions/UserLogin"
       }
+    }
   */
   const { email, password } = req.body;
   if (email == null) {
@@ -112,6 +113,32 @@ router.post("/signup", async (req, res, next) => {
     }
   */
   const { firstName, lastName, email, password } = req.body;
+
+  // Define a regular expression pattern to validate the email.
+  const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+
+  // Define a regular expression pattern to validate the password.
+  // This pattern enforces the requirements: minimum length 8, one uppercase, one lowercase, one number, one special character.
+  const passwordPattern =
+    /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/;
+
+  // Check if the email meets the requirements
+  if (!emailPattern.test(email)) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message: "Invalid email format. Please provide a valid email address.",
+    });
+  }
+
+  // Check if the password meets the requirements
+  if (!passwordPattern.test(password)) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message:
+        "Password requirements not met. It must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+    });
+  }
+
   // Generate a random salt
   const salt = crypto.randomBytes(16);
 
@@ -217,6 +244,8 @@ router.post("/signup", async (req, res, next) => {
 
 // Create a route for email verification
 router.get("/verify/:token", async (req, res) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.description = "Verifies the token sent to the users email."
   const { token } = req.params;
 
   try {

@@ -1,10 +1,31 @@
 const uploadImage = require("./middleware/uploadImage"); // Import both multer and uploadManager
 var express = require("express");
 var router = express.Router();
+var jsend = require("jsend");
 
+router.use(jsend.middleware);
+
+/* GET home page. */
+router.get("/", function (req, res, next) {
+  // #swagger.tags = ['Index']
+  // #swagger.description = "Landing page of the Server."
+  res.jsend.success({ statusCode: 200, result: "Server is running!" });
+});
 
 // Handle POST request with file upload to Amazon s3 techhype-bucket
 router.post("/upload", (req, res, next) => {
+  // #swagger.tags = ['FileUpload']
+  // #swagger.description = "Upload files to AWS s3"
+  /* #swagger.parameters['body'] = {
+    in: 'formData',
+    name: 'image',
+    description: 'image upload to AWS s3',
+    required: true,
+    type: 'file',
+    schema: {
+      $ref: '#/definitions/FileUpload'
+    }
+} */
   try {
     uploadImage(req, res, async (err) => {
       if (err) {
@@ -40,11 +61,6 @@ router.post("/upload", (req, res, next) => {
     console.error("Error:", error);
     res.status(500).json({ error: "File upload failed" });
   }
-});
-
-/* GET home page. */
-router.get("/", function (req, res, next) {
-  res.render("index", { title: "Express" });
 });
 
 module.exports = router;

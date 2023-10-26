@@ -12,6 +12,8 @@ router.use(jsend.middleware);
 
 // GET endpoint to retrieve the address for a card profile
 router.get("/:profileId", isAuth, async (req, res) => {
+  // #swagger.tags = ['Address']
+  // #swagger.description = "get address for a card profile."
   const profileId = req.params.profileId;
 
   // Check if the card profile exists
@@ -35,6 +37,8 @@ router.get("/:profileId", isAuth, async (req, res) => {
 
 // GET endpoint to retrieve the address by address Id
 router.get("/:addressId", isAuth, async (req, res) => {
+  // #swagger.tags = ['Address']
+  // #swagger.description = "get address By using the address ID."
   const addressId = req.params.addressId;
   const address = await addressService.getById(addressId);
   if (address) {
@@ -49,6 +53,16 @@ router.get("/:addressId", isAuth, async (req, res) => {
 
 // POST/PUT endpoint to add or update an address for a card profile
 router.post("/:profileId", isAuth, async (req, res) => {
+  // #swagger.tags = ['Address']
+  // #swagger.description = "Add or update an address for a card profile."
+  /* #swagger.parameters['body'] =  {
+      "name": "body",
+      "in": "body",
+        "schema": {
+          $ref: "#/definitions/Address"
+        }
+      }
+    */
   const profileId = req.params.profileId;
   const data = req.body;
 
@@ -85,6 +99,8 @@ router.post("/:profileId", isAuth, async (req, res) => {
 
 // DELETE endpoint to delete the address for a card profile
 router.delete("/:profileId", isAuth, async (req, res) => {
+  // #swagger.tags = ['Address']
+  // #swagger.description = "Delete an address for a card profile."
   const profileId = req.params.profileId;
 
   // Check if the card profile exists

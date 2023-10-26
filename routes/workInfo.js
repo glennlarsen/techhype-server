@@ -12,6 +12,8 @@ router.use(jsend.middleware);
 
 // GET endpoint to retrieve the workInfo for a card profile
 router.get("/:profileId", isAuth, async (req, res) => {
+  // #swagger.tags = ['WorkInfo']
+  // #swagger.description = "get Work info for a card profile."
   const profileId = req.params.profileId;
 
   // Check if the card profile exists
@@ -33,8 +35,10 @@ router.get("/:profileId", isAuth, async (req, res) => {
   }
 });
 
-// GET endpoint to retrieve the WorkInfo by workInfo Id
+// GET endpoint to retrieve the Work info by workInfo Id
 router.get("/:workInfoId", isAuth, async (req, res) => {
+  // #swagger.tags = ['WorkInfo']
+  // #swagger.description = "get Work info By using the WorkInfo ID."
   const workInfoId = req.params.workInfoId;
   const workInfo = await workInfoService.getById(workInfoId);
   if (workInfo) {
@@ -49,6 +53,16 @@ router.get("/:workInfoId", isAuth, async (req, res) => {
 
 // POST/PUT endpoint to add or update workInfo for a card profile
 router.post("/:profileId", isAuth, async (req, res) => {
+  // #swagger.tags = ['WorkInfo']
+  // #swagger.description = "Add or update Work info for a card profile."
+  /* #swagger.parameters['body'] =  {
+      "name": "body",
+      "in": "body",
+        "schema": {
+          $ref: "#/definitions/WorkInfo"
+        }
+      }
+    */
   const profileId = req.params.profileId;
   const data = req.body;
 
@@ -61,7 +75,7 @@ router.post("/:profileId", isAuth, async (req, res) => {
     });
   }
 
-  let workInfo; // Initialize an work info variable
+  let workInfo; // Initialize an Work info variable
 
   // Check if an work info already exists for the specified profileId
   const existingWorkInfo = await workInfoService.getByProfileId(profileId);
@@ -86,6 +100,8 @@ router.post("/:profileId", isAuth, async (req, res) => {
 
 // DELETE endpoint to delete the workInfo for a card profile
 router.delete("/:profileId", isAuth, async (req, res) => {
+  // #swagger.tags = ['WorkInfo']
+  // #swagger.description = "Delete Work info for a card profile."
   const profileId = req.params.profileId;
 
   // Check if the card profile exists

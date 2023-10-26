@@ -15,7 +15,7 @@ router.use(jsend.middleware);
 // GET endpoint to retrieve Cards for a specific user
 router.get("/", isAuth, async (req, res, next) => {
   // #swagger.tags = ['Card']
-  // #swagger.description = "get the users cards."
+  // #swagger.description = "get all the logged in users cards."
   try {
     const userId = req.user?.id ?? 0;
     const cards = await cardService.getAll(userId);
@@ -210,7 +210,59 @@ router.delete("/:cardId", isAuth, async (req, res) => {
 // POST endpoint to add a new cardProfile to a card
 router.post("/:cardId", isAuth, uploadImage, async (req, res) => {
   // #swagger.tags = ['CardProfile']
-  // #swagger.description = "Create a new cardProfile for a specific card."
+  // #swagger.description = "Create a new cardProfile for a specific card with an image upload."
+  // #swagger.consumes = ['multipart/form-data']
+  /* #swagger.parameters['formData'] = {
+  in: 'formData',
+  name: 'image',
+  description: 'Upload profile image.',
+  type: 'file',
+} */
+  /* #swagger.parameters['name'] = {
+  in: 'formData',
+  name: 'name',
+   type: 'string',
+} */
+  /* #swagger.parameters['title'] = {
+  in: 'formData',
+  name: 'title',
+   type: 'string',
+} */
+  /* #swagger.parameters['firstName'] = {
+  in: 'formData',
+  name: 'firstName',
+   type: 'string',
+} */
+  /* #swagger.parameters['lastName'] = {
+  in: 'formData',
+  name: 'lastName',
+   type: 'string',
+} */
+  /* #swagger.parameters['birthday'] = {
+  in: 'formData',
+  name: 'birthday',
+   type: 'string',
+} */
+  /* #swagger.parameters['phone'] = {
+  in: 'formData',
+  name: 'phone',
+   type: 'string',
+} */
+  /* #swagger.parameters['email'] = {
+  in: 'formData',
+  name: 'email',
+   type: 'string',
+} */
+  /* #swagger.parameters['website'] = {
+  in: 'formData',
+  name: 'website',
+   type: 'string',
+} */
+  /* #swagger.parameters['website2'] = {
+  in: 'formData',
+  name: 'website2',
+   type: 'string',
+} */
 
   const cardId = req.params.cardId;
   const userId = req.user?.id ?? 0;
@@ -315,6 +367,60 @@ router.post("/:cardId", isAuth, uploadImage, async (req, res) => {
 
 // PUT endpoint to update a cardProfile
 router.put("/:cardId/:profileId", isAuth, uploadImage, async (req, res) => {
+  // #swagger.tags = ['CardProfile']
+  // #swagger.description = "Updates a cardProfile for a specific card."
+  // #swagger.consumes = ['multipart/form-data']
+  /* #swagger.parameters['formData'] = {
+  in: 'formData',
+  name: 'image',
+  description: 'Upload profile image.',
+  type: 'file',
+} */
+  /* #swagger.parameters['name'] = {
+  in: 'formData',
+  name: 'name',
+   type: 'string',
+} */
+  /* #swagger.parameters['title'] = {
+  in: 'formData',
+  name: 'title',
+   type: 'string',
+} */
+  /* #swagger.parameters['firstName'] = {
+  in: 'formData',
+  name: 'firstName',
+   type: 'string',
+} */
+  /* #swagger.parameters['lastName'] = {
+  in: 'formData',
+  name: 'lastName',
+   type: 'string',
+} */
+  /* #swagger.parameters['birthday'] = {
+  in: 'formData',
+  name: 'birthday',
+   type: 'string',
+} */
+  /* #swagger.parameters['phone'] = {
+  in: 'formData',
+  name: 'phone',
+   type: 'string',
+} */
+  /* #swagger.parameters['email'] = {
+  in: 'formData',
+  name: 'email',
+   type: 'string',
+} */
+  /* #swagger.parameters['website'] = {
+  in: 'formData',
+  name: 'website',
+   type: 'string',
+} */
+  /* #swagger.parameters['website2'] = {
+  in: 'formData',
+  name: 'website2',
+   type: 'string',
+} */
   const cardId = req.params.cardId;
   const profileId = req.params.profileId;
   const userId = req.user?.id ?? 0;
@@ -376,59 +482,58 @@ router.put("/:cardId/:profileId", isAuth, uploadImage, async (req, res) => {
 
 // DELETE endpoint to delete a card profile
 router.delete("/:cardId/:profileId", isAuth, async (req, res) => {
-    // #swagger.tags = ['CardProfile']
-    // #swagger.description = "Delete a card profile for a specific card."
-  
-    const cardId = req.params.cardId;
-    const profileId = req.params.profileId;
-    const userId = req.user?.id ?? 0;
-  
-    try {
-      // Check if the card exists and belongs to the user
-      const card = await cardService.getOneById(cardId);
+  // #swagger.tags = ['CardProfile']
+  // #swagger.description = "Delete a card profile for a specific card."
 
-      console.log("card: ", card.card);
-  
-      if (!card.card) {
-        return res.jsend.fail({
-          statusCode: 404,
-          message: "This card does not exist.",
-        });
-      }
-      if (card.card.UserId !== userId) {
-        return res.jsend.fail({
-          statusCode: 401,
-          message: "This card does not belong to you.",
-        });
-      }
-  
-      const profile = await cardProfileService.getProfileById(profileId);
-  
-      if (!profile) {
-        return res.jsend.fail({
-          statusCode: 404,
-          message: "Card profile not found.",
-        });
-      }
-  
-      // Delete the card profile
-      const result = await cardProfileService.delete(profileId);
-  
-      if (result.success) {
-        res.jsend.success({
-          statusCode: 200,
-          message: "Card profile deleted successfully.",
-        });
-      } else {
-        res.jsend.fail({
-          statusCode: 400,
-          message: result.message,
-        });
-      }
-    } catch (error) {
-      res.jsend.error(error.message);
+  const cardId = req.params.cardId;
+  const profileId = req.params.profileId;
+  const userId = req.user?.id ?? 0;
+
+  try {
+    // Check if the card exists and belongs to the user
+    const card = await cardService.getOneById(cardId);
+
+    console.log("card: ", card.card);
+
+    if (!card.card) {
+      return res.jsend.fail({
+        statusCode: 404,
+        message: "This card does not exist.",
+      });
     }
-  });
-  
+    if (card.card.UserId !== userId) {
+      return res.jsend.fail({
+        statusCode: 401,
+        message: "This card does not belong to you.",
+      });
+    }
+
+    const profile = await cardProfileService.getProfileById(profileId);
+
+    if (!profile) {
+      return res.jsend.fail({
+        statusCode: 404,
+        message: "Card profile not found.",
+      });
+    }
+
+    // Delete the card profile
+    const result = await cardProfileService.delete(profileId);
+
+    if (result.success) {
+      res.jsend.success({
+        statusCode: 200,
+        message: "Card profile deleted successfully.",
+      });
+    } else {
+      res.jsend.fail({
+        statusCode: 400,
+        message: result.message,
+      });
+    }
+  } catch (error) {
+    res.jsend.error(error.message);
+  }
+});
 
 module.exports = router;

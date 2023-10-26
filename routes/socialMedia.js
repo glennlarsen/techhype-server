@@ -12,6 +12,8 @@ router.use(jsend.middleware);
 
 // GET endpoint to retrieve the social media links for a card profile
 router.get("/:profileId", isAuth, async (req, res) => {
+  // #swagger.tags = ['SocialMedia']
+  // #swagger.description = "get Social media for a card profile."
   const profileId = req.params.profileId;
 
   // Check if the card profile exists
@@ -35,6 +37,8 @@ router.get("/:profileId", isAuth, async (req, res) => {
 
 // GET endpoint to retrieve the social media links by social media Id
 router.get("/:socialMediaId", isAuth, async (req, res) => {
+  // #swagger.tags = ['SocialMedia']
+  // #swagger.description = "get Social media by using the socialmedia ID."
   const socialMediaId = req.params.socialMediaId;
   const socialMedia = await socialMediaService.getById(socialMediaId);
   if (socialMedia) {
@@ -49,6 +53,16 @@ router.get("/:socialMediaId", isAuth, async (req, res) => {
 
 // POST/PUT endpoint to add or update an address for a card profile
 router.post("/:profileId", isAuth, async (req, res) => {
+  // #swagger.tags = ['SocialMedia']
+  // #swagger.description = "Add or update a social media for a card profile."
+  /* #swagger.parameters['body'] =  {
+      "name": "body",
+      "in": "body",
+        "schema": {
+          $ref: "#/definitions/SocialMedia"
+        }
+      }
+    */
   const profileId = req.params.profileId;
   const data = req.body;
 
@@ -87,6 +101,8 @@ router.post("/:profileId", isAuth, async (req, res) => {
 
 // DELETE endpoint to delete the socialMedia for a card profile
 router.delete("/:profileId", isAuth, async (req, res) => {
+  // #swagger.tags = ['SocialMedia']
+  // #swagger.description = "Delete a social media for a card profile."
   const profileId = req.params.profileId;
 
   // Check if the card profile exists
