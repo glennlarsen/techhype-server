@@ -8,6 +8,7 @@ const connection = {
   username: process.env.ADMIN_USERNAME,
   password: process.env.ADMIN_PASSWORD,
   host: process.env.HOST,
+  port: process.env.DB_PORT,
   dialect: process.env.DIALECT,
   dialectmodel: process.env.DIALECTMODEL,
 };
