@@ -8,7 +8,6 @@
   "host": "https://tricky-cyan-zipper.cyclic.app",
   "basePath": "/",
   "schemes": [
-    "http",
     "https"
   ],
   "securityDefinitions": {
