@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node swagger",
+    "start": "node ./bin/www",
+    "start-dev": "node swagger",
     "test": "jest"
   },
   "dependencies": {
