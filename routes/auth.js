@@ -212,7 +212,7 @@ router.post("/signup", async (req, res, next) => {
               <td align="center">
                 <h1 style="color: black;">Thank you for signing up on Techhype!</h1>
                 <p style="color: black;">To verify your email, please click the button below:</p>
-                <a href="${process.env.BASE_URL}/auth/verify/${verificationToken}" style="text-decoration: none; background-color: #54d4c6; color: black; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; display: inline-block; font-weight: bold;">
+                <a href="https://tricky-cyan-zipper.cyclic.app/auth/verify/${verificationToken}" style="text-decoration: none; background-color: #54d4c6; color: black; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; display: inline-block; font-weight: bold;">
                   Verify Email
                 </a>
               </td>
