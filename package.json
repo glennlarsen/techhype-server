@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "set NODE_ENV=production&& node ./bin/www",
-    "start-prod": "set NODE_ENV=production&& node swagger",
-    "start-dev": "set NODE_ENV=development&& node swagger",
+    "start": "cross-env NODE_ENV=production node swagger",
+    "start-prod": "cross-env NODE_ENV=production node swagger",
+    "start-dev": "cross-env NODE_ENV=development node swagger",
     "test": "jest"
   },
   "dependencies": {
@@ -34,5 +34,8 @@
     "sqlite3": "^5.1.6",
     "swagger-autogen": "^2.23.6",
     "swagger-ui-express": "^5.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }
