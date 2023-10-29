@@ -179,56 +179,64 @@ router.post("/signup", async (req, res, next) => {
   expirationTime.setHours(expirationTime.getHours() + 24); // Adjust the duration as needed
 
   // Hash the password and create a user record with the verification token
-  crypto.pbkdf2(
-    password,
-    salt,
-    310000,
-    32,
-    "sha256",
-    async (err, hashedPassword) => {
-      if (err) {
-        return next(err);
-      }
-
-      // Create a new user record with the verification token
-      const user = await userService.create(
-        firstName,
-        lastName,
-        email,
-        hashedPassword,
-        salt,
-        verificationToken,
-        expirationTime
-      );
-
-      // Send a verification email to the user
-      const mailOptions = {
-        from: process.env.NODEMAILER_USER, // Sender's email address
-        to: email, // Recipient's email address (user's email)
-        subject: "Email Verification - Techhype",
-        text: `Hello ${firstName} Please verify your email by clicking this link: 
-               ${process.env.BASE_URL}/auth/verify/${verificationToken}"`, // Design the verification email in this HTML
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Email verification error:", error);
-          res.jsend.fail({
-            statusCode: 401,
-            result: error,
-          });
+  try {
+    const hashedPassword = await new Promise((resolve, reject) => {
+      crypto.pbkdf2(password, salt, 310000, 32, "sha256", (err, result) => {
+        if (err) {
+          reject(err);
         } else {
-          console.log("Email verification sent:", info.response);
-          // Return a success response to the user
-          res.jsend.success({
-            statusCode: 201,
-            result:
-              "You created an account. Please check your email for verification instructions.",
-          });
+          resolve(result);
         }
       });
-    }
-  );
+    });
+
+    // Create a new user record with the verification token
+    const user = await userService.create(
+      firstName,
+      lastName,
+      email,
+      hashedPassword,
+      salt,
+      verificationToken,
+      expirationTime
+    );
+
+    // Send a verification email to the user
+    const mailOptions = {
+      from: process.env.NODEMAILER_USER, // Sender's email address
+      to: email, // Recipient's email address (user's email)
+      subject: "Email Verification - Techhype",
+      html: `
+      <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+          <td align="center">
+            <h1 style="color: black;">Thank you for signing up on Techhype!</h1>
+            <p style="color: black;">To verify your email, please click the button below:</p>
+            <a href="${process.env.BASE_URL}/auth/verify/${verificationToken}" style="text-decoration: none; background-color: #54d4c6; color: black; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; display: inline-block; font-weight: bold;">
+              Verify Email
+            </a>
+          </td>
+        </tr>
+      </table>
+    `, // Design the verification email in this HTML
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    console.log("Email verification sent");
+    // Return a success response to the user
+    res.jsend.success({
+      statusCode: 201,
+      result:
+        "You created an account. Please check your email for verification instructions.",
+    });
+  } catch (error) {
+    console.error("Email verification error:", error);
+    res.jsend.fail({
+      statusCode: 401,
+      result: error,
+    });
+  };
 });
 
 // Create a route for email verification
