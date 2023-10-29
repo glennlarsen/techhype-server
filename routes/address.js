@@ -35,7 +35,7 @@ router.get("/:profileId", isAuth, async (req, res) => {
   }
 });
 
-// GET endpoint to retrieve the address by address Id
+// GET endpoint to retrieve the address by address Id (not working, does same as the one above)
 router.get("/:addressId", isAuth, async (req, res) => {
   // #swagger.tags = ['Address']
   // #swagger.description = "get address By using the address ID."

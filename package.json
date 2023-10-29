@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
-    "start-dev": "node swagger",
+    "start": "set NODE_ENV=production&& node swagger",
+    "start-dev": "set NODE_ENV=development&& node swagger",
     "test": "jest"
   },
   "dependencies": {
@@ -12,6 +12,7 @@
     "aws-sdk": "^2.1472.0",
     "connect-sqlite3": "^0.9.13",
     "cookie-parser": "~1.4.4",
+    "cross-env": "^7.0.3",
     "debug": "~2.6.9",
     "dotenv": "^16.3.1",
     "ejs": "~2.6.1",
