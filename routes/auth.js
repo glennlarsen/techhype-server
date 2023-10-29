@@ -236,13 +236,13 @@ router.post("/signup", async (req, res, next) => {
       statusCode: 401,
       result: error,
     });
-  };
+  }
 });
 
 // Create a route for email verification
 router.get("/verify/:token", async (req, res) => {
   // #swagger.tags = ['Auth']
-  // #swagger.description = "Verifies the token sent to the users email."
+  // #swagger.description = "Verifies the token sent to the user's email."
   const { token } = req.params;
 
   try {
@@ -259,12 +259,135 @@ router.get("/verify/:token", async (req, res) => {
     // Update the user's "Verified" field to mark the email as verified
     await user.update({ Verified: true });
 
+    // Now that the token is cleared, send the success response
     return res.jsend.success({
       result: "Email verified successfully. You can now log in.",
     });
   } catch (error) {
     console.error("Email verification error:", error);
     return res.jsend.error("Email verification failed");
+  }
+});
+
+// Route for forgot password
+router.post("/forgotpassword", jsonParser, async (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.description = "Sends a password reset link to the user's email address."
+  const { email } = req.body;
+
+  if (!email) {
+    return res.jsend.fail({ statusCode: 400, message: "Email is required." });
+  }
+
+  // Find the user by their email
+  const user = await userService.getOneByEmail(email);
+
+  if (!user) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message: "User with this email does not exist.",
+    });
+  }
+
+  // Generate a reset token and an expiration time
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const expirationTime = new Date();
+  expirationTime.setHours(expirationTime.getHours() + 1); // Set the expiration time as needed
+
+  // Create a new token record associated with the user
+  const token = await userService.createToken(
+    user.id,
+    resetToken,
+    expirationTime
+  );
+
+  // Send the password reset email to the user
+  const resetLink = `${process.env.BASE_URL}/auth/resetpassword/${resetToken}`; // Update with the correct URL
+  const mailOptions = {
+    from: process.env.NODEMAILER_USER,
+    to: email,
+    subject: "Password Reset - Techhype",
+    html: `
+      <p>You requested a password reset for your Techhype account.</p>
+      <p>To reset your password, please click on the following link:</p>
+      <a href="${resetLink}" target="_blank">Reset Password</a>
+      <p>If you did not request a password reset, please ignore this email.</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return res.jsend.success({
+      statusCode: 200,
+      message: "Password reset link sent to your email.",
+    });
+  } catch (error) {
+    return res.jsend.fail({
+      statusCode: 500,
+      message: "Failed to send password reset email.",
+    });
+  }
+});
+
+// Route to reset to a new password
+router.post("/resetpassword/:token", jsonParser, async (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.description = "Set a new password after clicking the password reset link."
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message: "New password is required.",
+    });
+  }
+
+  // Verify the reset token
+  const tokenRecord = await userService.getToken(token);
+
+  if (!tokenRecord) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message:
+        "Invalid or expired password reset link. Please request a new one.",
+    });
+  }
+
+  // Get the associated user from the token record
+  const user = await userService.getUserFromToken(token);
+
+  // Generate a new salt and hash the new password
+  const newSalt = crypto.randomBytes(16);
+  const newHashedPassword = await new Promise((resolve, reject) => {
+    crypto.pbkdf2(newPassword, newSalt, 310000, 32, "sha256", (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+
+  // Update the user's password in the database
+  user.EncryptedPassword = newHashedPassword;
+  user.Salt = newSalt;
+
+  // Clear the reset token in the Token model
+  await userService.clearToken(token);
+
+  try {
+    await user.save();
+    return res.jsend.success({
+      statusCode: 200,
+      message:
+        "Password reset successful. You can now log in with your new password.",
+    });
+  } catch (error) {
+    return res.jsend.fail({
+      statusCode: 500,
+      message: "Failed to reset the password.",
+    });
   }
 });
 

@@ -107,13 +107,73 @@
         "tags": [
           "Auth"
         ],
-        "description": "Verifies the token sent to the users email.",
+        "description": "Verifies the token sent to the user's email.",
         "parameters": [
           {
             "name": "token",
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/forgotpassword": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "Sends a password reset link to the user's email address.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/resetpassword/{token}": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "Set a new password after clicking the password reset link.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "newPassword": {
+                  "example": "any"
+                }
+              }
+            }
           }
         ],
         "responses": {
