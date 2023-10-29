@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node swagger",
-    "start-prod": "cross-env NODE_ENV=production node swagger",
-    "start-dev": "cross-env NODE_ENV=development node swagger",
+    "start-prod": "set NODE_ENV=production&& node swagger",
+    "start-dev": "set NODE_ENV=development&& node swagger",
     "test": "jest"
   },
   "dependencies": {
