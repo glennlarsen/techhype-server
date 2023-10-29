@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "set NODE_ENV=production&& node swagger",
+    "start": "set NODE_ENV=production&& node ./bin/www",
     "start-prod": "set NODE_ENV=production&& node swagger",
     "start-dev": "set NODE_ENV=development&& node swagger",
     "test": "jest"
