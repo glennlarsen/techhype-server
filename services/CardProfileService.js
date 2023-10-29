@@ -75,6 +75,7 @@ class CardProfileService {
     };
   }
 
+    // Function to update a card profile status active/inactive
   async updateActiveCardProfile(cardId, cardProfileId) {
     try {
       // First, deactivate all card profiles for the given card
