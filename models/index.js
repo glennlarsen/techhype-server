@@ -2,7 +2,7 @@ const Sequelize = require('sequelize')
 const fs = require("fs")
 const path = require("path")
 const basename = path.basename(__filename);
-require('dotenv').config()
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` })
 const connection = {
   database: process.env.DATABASE_NAME,
   username: process.env.ADMIN_USERNAME,
