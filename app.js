@@ -3,7 +3,7 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` })
+require('dotenv').config()
 var db = require("./models");
 db.sequelize.sync({ force: false });
 const swaggerUi = require("swagger-ui-express");
