@@ -3,13 +3,11 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-require('dotenv').config()
 var db = require("./models");
 db.sequelize.sync({ force: false });
 const swaggerUi = require("swagger-ui-express");
 const swaggerFile = require("./swagger-output.json");
 const bodyParser = require("body-parser");
-
 var indexRouter = require("./routes/index");
 var authRouter = require("./routes/auth");
 var usersRouter = require("./routes/users");
@@ -45,7 +43,6 @@ app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 app.use(function (req, res, next) {
   next(createError(404));
 });
-
 
 // error handler
 app.use(function (err, req, res, next) {
