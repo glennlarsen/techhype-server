@@ -19,6 +19,15 @@ var SocialMediaRouter = require("./routes/socialMedia");
 
 var app = express();
 
+const corsOptions = {
+  origin: ['http://localhost:3000', 'https://techhype.netlify.app/'],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
