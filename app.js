@@ -21,7 +21,7 @@ var SocialMediaRouter = require("./routes/socialMedia");
 var app = express();
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://techhype.netlify.app/'],
+  origin: ['http://localhost:3000', 'https://api.techhype.no'],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   preflightContinue: false,
   optionsSuccessStatus: 204,
