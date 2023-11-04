@@ -1,7 +1,7 @@
-require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` })
+require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 var createError = require("http-errors");
 var express = require("express");
-const cors = require('cors');
+const cors = require("cors");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
@@ -21,8 +21,13 @@ var SocialMediaRouter = require("./routes/socialMedia");
 var app = express();
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://api.techhype.no'],
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  origin: [
+    "http://localhost:3000",
+    "https://techhype.netlify.app/",
+    "https://api.techhype.no",
+    "https://tricky-cyan-zipper.cyclic.app",
+  ],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
   optionsSuccessStatus: 204,
 };
