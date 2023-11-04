@@ -25,6 +25,7 @@ const corsOptions = {
     "http://localhost:3000",
     "https://techhype.netlify.app/",
     "https://api.techhype.no",
+    "https://techhype.no",
     "https://tricky-cyan-zipper.cyclic.app",
   ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
