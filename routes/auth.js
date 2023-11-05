@@ -247,6 +247,7 @@ router.get("/verify/:token", async (req, res) => {
 
   try {
     const user = await userService.verifyToken(token);
+    console.log(user);
 
     if (!user) {
       // Token is invalid or has expired
