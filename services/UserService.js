@@ -115,7 +115,7 @@ class UserService {
           [Sequelize.Op.gt]: new Date(),
         },
       },
-      include: [{ model: this.User, where: { Verified: false } }],
+      include: [{ model: this.User }],
     });
 
     if (tokenRecord) {

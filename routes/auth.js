@@ -247,7 +247,7 @@ router.get("/verify/:token", async (req, res) => {
 
   try {
     const user = await userService.verifyToken(token);
-    console.log(user);
+    console.log("user: ", user);
 
     if (!user) {
       // Token is invalid or has expired
@@ -260,10 +260,7 @@ router.get("/verify/:token", async (req, res) => {
     // Update the user's "Verified" field to mark the email as verified
     await user.update({ Verified: true });
 
-    // Now that the token is cleared, send the success response
-   /*  return res.jsend.success({
-      result: "Email verified successfully. You can now log in.",
-    }); */
+    // Render the email is verified page
     return res.render("emailVerified", {user});
   } catch (error) {
     console.error("Email verification error:", error);
