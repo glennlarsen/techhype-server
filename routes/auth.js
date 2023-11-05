@@ -262,6 +262,7 @@ router.get("/verify/:token", async (req, res) => {
     // Now that the token is cleared, send the success response
     return res.jsend.success({
       result: "Email verified successfully. You can now log in.",
+      redirect: "/auth/login", // Add the redirect URL here
     });
   } catch (error) {
     console.error("Email verification error:", error);
