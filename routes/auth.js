@@ -67,7 +67,7 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
         return cb(err);
       }
       if (!crypto.timingSafeEqual(user.EncryptedPassword, hashedPassword)) {
-        return res.jsend.fail({ result: "Incorrect email or password" });
+        return res.jsend.fail({ result: "Incorrect password" });
       }
       let token;
       try {
