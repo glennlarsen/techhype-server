@@ -70,6 +70,7 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
         return res.jsend.fail({ result: "Incorrect password" });
       }
       let token;
+      let refreshToken;
       try {
         token = jwt.sign(
           {
@@ -82,6 +83,15 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
           process.env.TOKEN_SECRET,
           { expiresIn: process.env.JWT_EXPIRATION }
         );
+
+        refreshToken = jwt.sign(
+          { id: user.id },
+          process.env.REFRESH_TOKEN_SECRET,
+          { expiresIn: process.env.JWT_EXPIRATION_LONG }  // Refresh token expires in 7 days
+        );
+    
+        // Here, you might want to save the refreshToken with the user's record in the database
+
       } catch (err) {
         return res.jsend.error(
           "Something went wrong with creating the JWT token"
@@ -95,6 +105,7 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
         role: user.Role,
         verified: user.Verified,
         token: token,
+        refreshToken: refreshToken,
       });
     }
   );
@@ -389,5 +400,35 @@ router.post("/resetpassword/:token", jsonParser, async (req, res, next) => {
     });
   }
 });
+
+router.post("/refresh-token", jsonParser, async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return res.jsend.fail({ message: "Refresh token is required" });
+  }
+
+  // Optionally, verify if the refresh token exists in the database and is valid
+
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+    if (err) {
+      return res.jsend.fail({ message: "Invalid refresh token" });
+    }
+
+    const newAccessToken = jwt.sign(
+      {
+        id: user.id,
+        email: user.Email,
+        role: user.Role,
+        Verified: user.Verified,
+        name: user.FirstName,
+      },// You may want to include other user details
+      process.env.TOKEN_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
+    );
+
+    return res.jsend.success({ accessToken: newAccessToken });
+  });
+});
+
 
 module.exports = router;
