@@ -25,6 +25,8 @@ var app = express();
 const corsOptions = {
   origin: [
     "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
     "https://techhype.netlify.app",
     "https://techhype.no",
     "https://techhype-server-06db1c82ee3e.herokuapp.com",
