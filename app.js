@@ -24,9 +24,8 @@ const corsOptions = {
   origin: [
     "http://localhost:3000",
     "https://techhype.netlify.app/",
-    "https://api.techhype.no",
     "https://techhype.no",
-    "https://tricky-cyan-zipper.cyclic.app",
+    "https://techhype-server-06db1c82ee3e.herokuapp.com",
   ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
