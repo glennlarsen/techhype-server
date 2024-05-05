@@ -11,6 +11,10 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
         defaultValue: true,
       },
+      Designed: {
+        type: Sequelize.DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
     },
     {
       timestamps: false,

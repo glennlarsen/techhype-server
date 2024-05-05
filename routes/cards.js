@@ -136,7 +136,7 @@ router.put("/:cardId", isAuth, async (req, res) => {
       }
     */
   const cardId = req.params.cardId;
-  const { name, active } = req.body;
+  const { name, active, designed } = req.body;
 
   try {
     // Check if the card exists and belongs to the user
@@ -153,7 +153,7 @@ router.put("/:cardId", isAuth, async (req, res) => {
     // This depends on your specific requirements and how cards are associated with users.
 
     // Update the card details
-    const updatedCard = await cardService.updateCard(cardId, name, active);
+    const updatedCard = await cardService.updateCard(cardId, name, active, designed);
 
     if (updatedCard.success) {
       res.jsend.success({
@@ -421,9 +421,10 @@ router.put("/:cardId/:profileId", isAuth, uploadImage, async (req, res) => {
   name: 'website2',
    type: 'string',
 } */
-  const cardId = req.params.cardId;
-  const profileId = req.params.profileId;
+  const { cardId, profileId } = req.params;
   const userId = req.user?.id ?? 0;
+  const { active } = req.body;
+  const isActive = active === "true";
 
   try {
     // Check if the card exists and belongs to the user
@@ -456,27 +457,39 @@ router.put("/:cardId/:profileId", isAuth, uploadImage, async (req, res) => {
 
     // Extract image URL from uploadedFiles
     const imageUrl = uploadedFiles[0]?.location; // Assuming a single image upload
+    const updateData = { ...req.body, imageUrl };
 
     // Update the card profile
     const updatedCardProfile = await cardProfileService.update(
       profileId,
-      req.body,
-      imageUrl
+      updateData
     );
-
-    if (updatedCardProfile.success) {
-      res.jsend.success({
-        statusCode: 200,
-        result: updatedCardProfile,
-      });
-    } else {
-      res.jsend.fail({
-        statusCode: 400,
-        result: updatedCardProfile,
-      });
+    if (!updatedCardProfile.success) {
+      return res.jsend.fail({ statusCode: 400, result: updatedCardProfile });
     }
+
+    // Conditionally update active status if specified
+    if (typeof active !== "undefined") {
+      const activeUpdateResult =
+        await cardProfileService.updateActiveCardProfile(
+          cardId,
+          profileId,
+          isActive
+        );
+      if (!activeUpdateResult.success) {
+        return res.jsend.fail({ statusCode: 400, result: activeUpdateResult });
+      }
+    }
+
+    res.jsend.success({
+      statusCode: 200,
+      result: updatedCardProfile,
+    });
   } catch (error) {
-    res.jsend.error(error.message);
+    res.jsend.error({
+      statusCode: 500,
+      message: error.message,
+    });
   }
 });
 

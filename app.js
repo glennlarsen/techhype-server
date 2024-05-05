@@ -1,4 +1,6 @@
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
+console.log(`Environment: ${process.env.NODE_ENV}`);
+console.log(`Database Host: ${process.env.HOST}`);
 var createError = require("http-errors");
 var express = require("express");
 const cors = require("cors");
@@ -23,7 +25,7 @@ var app = express();
 const corsOptions = {
   origin: [
     "http://localhost:3000",
-    "https://techhype.netlify.app/",
+    "https://techhype.netlify.app",
     "https://techhype.no",
     "https://techhype-server-06db1c82ee3e.herokuapp.com",
   ],

@@ -100,7 +100,7 @@ class CardService {
     };
   }
 
-  async updateCard(cardId, name, active) {
+  async updateCard(cardId, name, active, designed) {
     // Check that all fields are provided
     if (!cardId) {
       return {
@@ -124,6 +124,18 @@ class CardService {
 
       // Define the fields to update
       const updatedFields = {};
+
+      if (existingCard.Designed === false) {
+        updatedFields.Designed = designed;
+      }
+
+      if (existingCard.Designed === true) {
+        return {
+          success: false,
+          message:
+            "Card design is already sent. You will receive your card shortly. Please contact us as soon as possible if you want to change your card design.",
+        };
+      }
 
       // Check if the name field is different
       if (name && name !== existingCard.Name) {
@@ -207,7 +219,8 @@ class CardService {
 
       return {
         success: true,
-        message:  "Card, associated CardProfiles, and CardUrls deleted successfully.",
+        message:
+          "Card, associated CardProfiles, and CardUrls deleted successfully.",
       };
     } catch (error) {
       return {

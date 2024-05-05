@@ -185,5 +185,31 @@ class UserService {
       return false; // An error occurred while clearing the token
     }
   }
+
+  async updateUserNames(userId, firstName, lastName) {
+    try {
+      const user = await this.User.findByPk(userId);
+      if (!user) {
+        return { success: false, message: "User not found" };
+      }
+
+      // Update fields if provided
+      if (firstName) user.FirstName = firstName;
+      if (lastName) user.LastName = lastName;
+
+      await user.save();
+      return {
+        success: true,
+        user: user,
+        message: "User updated successfully",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Failed to update user",
+        error: error.message,
+      };
+    }
+  }
 }
 module.exports = UserService;

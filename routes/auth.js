@@ -87,11 +87,10 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
         refreshToken = jwt.sign(
           { id: user.id },
           process.env.REFRESH_TOKEN_SECRET,
-          { expiresIn: process.env.JWT_EXPIRATION_LONG }  // Refresh token expires in 7 days
+          { expiresIn: process.env.JWT_EXPIRATION_LONG } // Refresh token expires in 7 days
         );
-    
-        // Here, you might want to save the refreshToken with the user's record in the database
 
+        // Here, you might want to save the refreshToken with the user's record in the database
       } catch (err) {
         return res.jsend.error(
           "Something went wrong with creating the JWT token"
@@ -272,7 +271,7 @@ router.get("/verify/:token", async (req, res) => {
     await user.update({ Verified: true });
 
     // Render the email is verified page
-    return res.render("emailVerified", {user});
+    return res.render("emailVerified", { user });
   } catch (error) {
     console.error("Email verification error:", error);
     return res.jsend.error("Email verification failed");
@@ -346,10 +345,24 @@ router.post("/resetpassword/:token", jsonParser, async (req, res, next) => {
   const { token } = req.params;
   const { newPassword } = req.body;
 
+  // Define a regular expression pattern to validate the password.
+  // This pattern enforces the requirements: minimum length 8, one uppercase, one lowercase, one number, one special character.
+  const passwordPattern =
+    /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/;
+
   if (!newPassword) {
     return res.jsend.fail({
       statusCode: 400,
       message: "New password is required.",
+    });
+  }
+
+  // Check if the password meets the requirements
+  if (!passwordPattern.test(newPassword)) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message:
+        "Password requirements not met. It must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
     });
   }
 
@@ -421,7 +434,7 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
         role: user.Role,
         Verified: user.Verified,
         name: user.FirstName,
-      },// You may want to include other user details
+      }, // You may want to include other user details
       process.env.TOKEN_SECRET,
       { expiresIn: process.env.JWT_EXPIRATION }
     );
@@ -429,6 +442,5 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
     return res.jsend.success({ accessToken: newAccessToken });
   });
 });
-
 
 module.exports = router;
