@@ -417,14 +417,23 @@ router.post("/resetpassword/:token", jsonParser, async (req, res, next) => {
 router.post("/refresh-token", jsonParser, async (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken) {
-    return res.jsend.fail({ message: "Refresh token is required" });
+    return res.status(400).jsend.fail({ message: "Refresh token is required" });
   }
 
-  // Optionally, verify if the refresh token exists in the database and is valid
+  try {
+    const decoded = await new Promise((resolve, reject) => {
+      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decodedToken) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(decodedToken);
+        }
+      });
+    });
 
-  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-    if (err) {
-      return res.jsend.fail({ message: "Invalid refresh token" });
+    const user = await userService.getUserById(decoded.id);
+    if (!user) {
+      return res.status(404).jsend.fail({ message: "User not found" });
     }
 
     const newAccessToken = jwt.sign(
@@ -434,13 +443,16 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
         role: user.Role,
         Verified: user.Verified,
         name: user.FirstName,
-      }, // You may want to include other user details
+      },
       process.env.TOKEN_SECRET,
       { expiresIn: process.env.JWT_EXPIRATION }
     );
 
-    return res.jsend.success({ accessToken: newAccessToken });
-  });
+    return res.jsend.success({ accessToken: newAccessToken, refreshToken: refreshToken });
+  } catch (err) {
+    return res.status(401).jsend.fail({ message: "Invalid refresh token" });
+  }
 });
+
 
 module.exports = router;
