@@ -426,7 +426,7 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
   try {
     const decoded = await jwtVerify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
-    const user = await userService.getUserById(decoded.id);
+    const user = await userService.getOne(decoded.id);
     if (!user) {
       return res.status(404).jsend.fail({ message: "User not found" });
     }
