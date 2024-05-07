@@ -417,6 +417,7 @@ router.post("/resetpassword/:token", jsonParser, async (req, res, next) => {
 });
 
 router.post("/refresh-token", jsonParser, async (req, res) => {
+  console.log(req.body);
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
