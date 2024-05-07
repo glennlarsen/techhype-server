@@ -10,7 +10,7 @@ var userService = new UserService(db);
 var bodyParser = require("body-parser");
 var jsonParser = bodyParser.json();
 var jwt = require("jsonwebtoken");
-const { promisify } = require('util');
+const { promisify } = require("util");
 const jwtVerify = promisify(jwt.verify);
 
 router.use(jsend.middleware);
@@ -425,27 +425,41 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
   }
 
   try {
-    const decoded = await jwtVerify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const decoded = await jwtVerify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
 
     const user = await userService.getOne(decoded.id);
     if (!user) {
       return res.status(404).jsend.fail({ message: "User not found" });
     }
 
-    const newAccessToken = jwt.sign({
+    const newAccessToken = jwt.sign(
+      {
+        id: user.id,
+        email: user.Email,
+        role: user.Role,
+        Verified: user.Verified,
+        name: user.FirstName,
+      },
+      process.env.TOKEN_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
+    );
+
+    return res.jsend.success({
+      token: newAccessToken,
+      refreshToken: refreshToken,
       id: user.id,
       email: user.Email,
-      role: user.Role,
-      Verified: user.Verified,
       name: user.FirstName,
-    }, process.env.TOKEN_SECRET, { expiresIn: process.env.JWT_EXPIRATION });
-
-    return res.jsend.success({ token: newAccessToken, refreshToken: refreshToken });
+      role: user.Role,
+      verified: user.Verified,
+    });
   } catch (err) {
     console.log("JWT Verification Error:", err);
     return res.status(401).jsend.fail({ message: "Invalid refresh token" });
   }
 });
-
 
 module.exports = router;
