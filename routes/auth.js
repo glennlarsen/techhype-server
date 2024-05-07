@@ -10,6 +10,8 @@ var userService = new UserService(db);
 var bodyParser = require("body-parser");
 var jsonParser = bodyParser.json();
 var jwt = require("jsonwebtoken");
+const { promisify } = require('util');
+const jwtVerify = promisify(jwt.verify);
 
 router.use(jsend.middleware);
 
@@ -416,41 +418,30 @@ router.post("/resetpassword/:token", jsonParser, async (req, res, next) => {
 
 router.post("/refresh-token", jsonParser, async (req, res) => {
   const { refreshToken } = req.body;
+
   if (!refreshToken) {
     return res.status(400).jsend.fail({ message: "Refresh token is required" });
   }
 
   try {
-    const decoded = await new Promise((resolve, reject) => {
-      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decodedToken) => {
-        if (err) {
-          console.log("Token verification error:", err);
-          reject(err);
-        } else {
-          resolve(decodedToken);
-        }
-      });
-    });
+    const decoded = await jwtVerify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
     const user = await userService.getUserById(decoded.id);
     if (!user) {
       return res.status(404).jsend.fail({ message: "User not found" });
     }
 
-    const newAccessToken = jwt.sign(
-      {
-        id: user.id,
-        email: user.Email,
-        role: user.Role,
-        Verified: user.Verified,
-        name: user.FirstName,
-      },
-      process.env.TOKEN_SECRET,
-      { expiresIn: process.env.JWT_EXPIRATION }
-    );
+    const newAccessToken = jwt.sign({
+      id: user.id,
+      email: user.Email,
+      role: user.Role,
+      Verified: user.Verified,
+      name: user.FirstName,
+    }, process.env.TOKEN_SECRET, { expiresIn: process.env.JWT_EXPIRATION });
 
-    return res.jsend.success({ accessToken: newAccessToken, refreshToken: refreshToken });
+    return res.jsend.success({ token: newAccessToken, refreshToken: refreshToken });
   } catch (err) {
+    console.log("JWT Verification Error:", err);
     return res.status(401).jsend.fail({ message: "Invalid refresh token" });
   }
 });
