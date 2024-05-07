@@ -424,6 +424,7 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
     const decoded = await new Promise((resolve, reject) => {
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decodedToken) => {
         if (err) {
+          console.log("Token verification error:", err);
           reject(err);
         } else {
           resolve(decodedToken);
