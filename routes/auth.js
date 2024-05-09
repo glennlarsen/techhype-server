@@ -86,13 +86,13 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
       // Set the JWT and refresh token in HTTP-only cookies
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', //true in production only
-        sameSite: 'strict'  // can be 'strict' or 'lax',
+        secure: false, //true in production only
+        sameSite: 'none'  // can be 'strict' or 'lax or none',
       });
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        secure: false,
+        sameSite: 'none'
       });
 
       return res.jsend.success({
@@ -457,14 +457,14 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
 
     res.cookie('token', newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', //true in production only
-      sameSite: 'strict'
+      secure: false, //true in production only
+      sameSite: 'none'
     });
 
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
+      secure: false,
+      sameSite: 'none'
     });
 
     console.log("user: ", user);
