@@ -88,17 +88,14 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
       // Set the JWT and refresh token in HTTP-only cookies
       res.cookie('token', token, {
         httpOnly: true,
-        secure: true, //true in production only
-        sameSite: 'None', // can be 'strict' or 'lax or None',
       });
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'None',
       });
 
       return res.jsend.success({
         result: "You are logged in",
+        token: token,
         id: user.id,
         email: user.Email,
         name: user.FirstName,
