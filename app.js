@@ -19,6 +19,7 @@ var cardsRouter = require("./routes/cards");
 var AddressRouter = require("./routes/address");
 var WorkInfoRouter = require("./routes/workInfo");
 var SocialMediaRouter = require("./routes/socialMedia");
+console.log("environment: ", process.env.NODE_ENV);
 
 var app = express();
 
