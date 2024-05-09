@@ -89,12 +89,12 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
       res.cookie('token', token, {
         httpOnly: true,
         secure: true, //true in production only
-        sameSite: 'lax', // can be 'strict' or 'lax or None',
+        sameSite: 'None', // can be 'strict' or 'lax or None',
       });
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: 'lax',
+        sameSite: 'None',
       });
 
       return res.jsend.success({
