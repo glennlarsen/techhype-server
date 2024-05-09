@@ -434,6 +434,8 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
       return res.status(404).jsend.fail({ message: "User not found" });
     }
 
+    const userData = user.toJSON();
+
     const newAccessToken = jwt.sign(
       {
         id: user.id,
@@ -469,11 +471,11 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
     console.log("userdata: ", user.dataValues);
     return res.jsend.success({
       result: "Token successfully refreshed",
-      id: user.id,
-      email: user.Email,
-      name: user.FirstName,
-      role: user.Role,
-      verified: user.Verified,
+      id: userData.id,
+      email: userData.Email,
+      name: userData.FirstName,
+      role: userData.Role,
+      verified: userData.Verified
     });
   } catch (err) {
     console.log("JWT Verification Error:", err);
