@@ -22,6 +22,8 @@ var SocialMediaRouter = require("./routes/socialMedia");
 
 var app = express();
 
+app.set('trust proxy', 1); // trust first proxy
+
 const corsOptions = {
   origin: [
     "http://localhost:3000",
@@ -34,6 +36,7 @@ const corsOptions = {
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
   optionsSuccessStatus: 204,
+  allowedHeaders: 'Authorization, Content-Type, *',
   credentials: true,
 };
 

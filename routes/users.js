@@ -12,6 +12,7 @@ router.use(jsend.middleware);
 
 /* GET users listing. */
 router.get("/", isAuth, async (req, res, next) => {
+  console.log(req.cookies);
   // #swagger.tags = ['User']
   // #swagger.description = "Get the logged in user."
   try {
