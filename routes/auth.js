@@ -83,6 +83,8 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
         { expiresIn: process.env.JWT_EXPIRATION_LONG }  // or "604800" (expressed in seconds)
       );
 
+      console.log("Token creation: ", token);
+
       // Set the JWT and refresh token in HTTP-only cookies
       res.cookie('token', token, {
         httpOnly: true,
@@ -104,6 +106,7 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
         verified: user.Verified
       });
     } catch (err) {
+      console.error("Error creating JWT token:", err);
       return res.jsend.error("Something went wrong with creating the JWT token");
     }
   });
