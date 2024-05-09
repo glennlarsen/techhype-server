@@ -484,13 +484,19 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  // Clear the authentication and refresh tokens
-  res.cookie('token', '', { expires: new Date(0), httpOnly: true, secure: true, sameSite: 'strict' });
-  res.cookie('refreshToken', '', { expires: new Date(0), httpOnly: true, secure: true, sameSite: 'strict' });
+  try {
+    // Clear the authentication and refresh tokens
+    res.cookie('token', '', { expires: new Date(0), httpOnly: true, secure: true, sameSite: 'strict' });
+    res.cookie('refreshToken', '', { expires: new Date(0), httpOnly: true, secure: true, sameSite: 'strict' });
 
-  // Send a response indicating logout was successful
-  return res.jsend.success({ message: 'Logged out successfully' });
+    // Send a response indicating logout was successful
+    return res.jsend.success({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout failed:', error);
+    return res.status(500).jsend.error({ message: 'Failed to log out' });
+  }
 });
+
 
 
 
