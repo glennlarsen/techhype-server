@@ -17,7 +17,7 @@ router.use(jsend.middleware);
 
 // Post for registered users to be able to login
 router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
-  // #swagger.tags = ['Auth']
+    // #swagger.tags = ['Auth']
   // #swagger.description = "Logs the user into the application. Both email and password must be correct. After successful login, the JWT token is returned - use it later in the Authorization header to access other endpoints."
   /* #swagger.parameters['body'] =  {
     "name": "body",
@@ -40,7 +40,6 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
 
   // Retrieve the user by email
   const user = await userService.getOneByEmail(email);
-
   if (!user) {
     return res.jsend.fail({
       statusCode: 400,
@@ -52,64 +51,62 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
   if (!user.Verified) {
     return res.jsend.fail({
       statusCode: 400,
-      result:
-        "User is not verified. Please check your email for the verification link.",
+      result: "User is not verified. Please check your email for the verification link.",
     });
   }
 
   // Verify the password
-  crypto.pbkdf2(
-    password,
-    user.Salt,
-    310000,
-    32,
-    "sha256",
-    function (err, hashedPassword) {
-      if (err) {
-        return cb(err);
-      }
-      if (!crypto.timingSafeEqual(user.EncryptedPassword, hashedPassword)) {
-        return res.jsend.fail({ result: "Incorrect password" });
-      }
-      let token;
-      let refreshToken;
-      try {
-        token = jwt.sign(
-          {
-            id: user.id,
-            email: user.Email,
-            role: user.Role,
-            Verified: user.Verified,
-            name: user.FirstName,
-          },
-          process.env.TOKEN_SECRET,
-          { expiresIn: process.env.JWT_EXPIRATION }
-        );
+  crypto.pbkdf2(password, user.Salt, 310000, 32, "sha256", function (err, hashedPassword) {
+    if (err) {
+      return res.jsend.error("Error in password encryption");
+    }
+    if (!crypto.timingSafeEqual(user.EncryptedPassword, hashedPassword)) {
+      return res.jsend.fail({ result: "Incorrect password" });
+    }
 
-        refreshToken = jwt.sign(
-          { id: user.id },
-          process.env.REFRESH_TOKEN_SECRET,
-          { expiresIn: process.env.JWT_EXPIRATION_LONG } // Refresh token expires in 7 days
-        );
+    try {
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.Email,
+          role: user.Role,
+          Verified: user.Verified,
+          name: user.FirstName,
+        },
+        process.env.TOKEN_SECRET,
+        { expiresIn: process.env.JWT_EXPIRATION }  // or "3600" (expressed in seconds)
+      );
 
-        // Here, you might want to save the refreshToken with the user's record in the database
-      } catch (err) {
-        return res.jsend.error(
-          "Something went wrong with creating the JWT token"
-        );
-      }
+      const refreshToken = jwt.sign(
+        { id: user.id },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: process.env.JWT_EXPIRATION_LONG }  // or "604800" (expressed in seconds)
+      );
+
+      // Set the JWT and refresh token in HTTP-only cookies
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: true, // set to true if you are using https
+        sameSite: 'strict'  // can be 'strict' or 'lax'
+      });
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true, // set to true if you are using https
+        sameSite: 'strict'
+      });
+
       return res.jsend.success({
         result: "You are logged in",
         id: user.id,
         email: user.Email,
         name: user.FirstName,
         role: user.Role,
-        verified: user.Verified,
-        token: token,
-        refreshToken: refreshToken,
+        verified: user.Verified
       });
+    } catch (err) {
+      return res.jsend.error("Something went wrong with creating the JWT token");
     }
-  );
+  });
 });
 
 // Post for new users to register / signup
@@ -417,8 +414,8 @@ router.post("/resetpassword/:token", jsonParser, async (req, res, next) => {
 });
 
 router.post("/refresh-token", jsonParser, async (req, res) => {
-  console.log(req.body);
-  const { refreshToken } = req.body;
+  // Retrieve the refresh token from HTTP-only cookies instead of the request body
+  const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
     return res.status(400).jsend.fail({ message: "Refresh token is required" });
@@ -447,19 +444,50 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRATION }
     );
 
+    // Optionally refresh the refresh token and set it in an HTTP-only cookie
+    const newRefreshToken = jwt.sign(
+      { id: user.id },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION_LONG }
+    );
+
+    res.cookie('token', newAccessToken, {
+      httpOnly: true,
+      secure: true, // Ensure HTTPS
+      sameSite: 'strict'
+    });
+
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict'
+    });
+
     return res.jsend.success({
       token: newAccessToken,
-      refreshToken: refreshToken,
-      id: user.id,
-      email: user.Email,
-      name: user.FirstName,
-      role: user.Role,
-      verified: user.Verified,
+      user: {
+        id: user.id,
+        email: user.Email,
+        name: user.FirstName,
+        role: user.Role,
+        verified: user.Verified,
+      }
     });
   } catch (err) {
     console.log("JWT Verification Error:", err);
     return res.status(401).jsend.fail({ message: "Invalid refresh token" });
   }
 });
+
+router.post('/logout', (req, res) => {
+  // Clear the authentication and refresh tokens
+  res.cookie('token', '', { expires: new Date(0), httpOnly: true, secure: true, sameSite: 'strict' });
+  res.cookie('refreshToken', '', { expires: new Date(0), httpOnly: true, secure: true, sameSite: 'strict' });
+
+  // Send a response indicating logout was successful
+  return res.jsend.success({ message: 'Logged out successfully' });
+});
+
+
 
 module.exports = router;
