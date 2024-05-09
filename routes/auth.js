@@ -428,6 +428,7 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
     );
 
     const user = await userService.getOne(decoded.id);
+    console.log("Decoded id:", decoded.id);
     console.log("User data:", user);
     if (!user) {
       return res.status(404).jsend.fail({ message: "User not found" });
@@ -466,11 +467,7 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
 
     return res.jsend.success({
       result: "Token successfully refreshed",
-      id: user.id,
-      email: user.Email,
-      name: user.FirstName,
-      role: user.Role,
-      verified: user.Verified,
+      user: user.toJSON()
     });
   } catch (err) {
     console.log("JWT Verification Error:", err);
