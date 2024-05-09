@@ -2,8 +2,7 @@ const jwt = require("jsonwebtoken");
 
 // Middleware function to determine if the API endpoint request is from an authenticated user
 function isAuth(req, res, next) {
-  const { cookie } = req.headers;
-  const token = cookie.split("token=")[1].split(";")[0];
+  const token = req.cookies.token;
   console.log("Received Token:", token); // Log the received token
   if (token) {
     try {
