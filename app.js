@@ -33,10 +33,10 @@ const corsOptions = {
     "https://techhype.no",
     "https://techhype-server-06db1c82ee3e.herokuapp.com",
   ],
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
   optionsSuccessStatus: 204,
-  allowedHeaders: 'Authorization, Content-Type, *',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 };
 
