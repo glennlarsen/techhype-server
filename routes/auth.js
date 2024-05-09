@@ -87,14 +87,12 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', //true in production only
-        sameSite: 'lax',  // can be 'strict' or 'lax',
-        origin: "http://localhost:3001"
+        sameSite: 'none'  // can be 'strict' or 'lax',
       });
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        origin: "http://localhost:3001"
+        sameSite: 'none'
       });
 
       return res.jsend.success({
@@ -460,15 +458,13 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
     res.cookie('token', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', //true in production only
-      sameSite: 'strict',
-      origin: "http://localhost:3001"
+      sameSite: 'none'
     });
 
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      origin: "http://localhost:3001"
+      sameSite: 'none'
     });
 
     console.log("user: ", user);
