@@ -427,14 +427,14 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    const user = await userService.getOne(decoded.id);
-    console.log("Decoded id:", decoded.id);
-    console.log("User data:", user);
-    if (!user) {
+    const result = await userService.getOne(decoded.id);
+
+    if (!result.success) {
       return res.status(404).jsend.fail({ message: "User not found" });
     }
 
-    const userData = user.toJSON();
+    const user = result.user;
+    
 
     const newAccessToken = jwt.sign(
       {
@@ -471,11 +471,11 @@ router.post("/refresh-token", jsonParser, async (req, res) => {
     console.log("userdata: ", user.dataValues);
     return res.jsend.success({
       result: "Token successfully refreshed",
-      id: userData.id,
-      email: userData.Email,
-      name: userData.FirstName,
-      role: userData.Role,
-      verified: userData.Verified
+      id: user.id,
+      email: user.Email,
+      name: user.FirstName,
+      role: user.Role,
+      verified: user.Verified,
     });
   } catch (err) {
     console.log("JWT Verification Error:", err);
