@@ -94,7 +94,7 @@ router.post("/login", authLimiter, jsonParser, async (req, res, next) => {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict'
       });
-
+console.log("environment: ", process.env.NODE_ENV);
       return res.jsend.success({
         result: "You are logged in",
         id: user.id,
