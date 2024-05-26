@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const isAuth = require("./middleware/isAuth");
+const { requiresAuth } = require("express-openid-connect");
 var db = require("../models");
 var UserService = require("../services/UserService");
 var userService = new UserService(db);
@@ -11,7 +11,7 @@ var jsend = require("jsend");
 router.use(jsend.middleware);
 
 /* GET users listing. */
-router.get("/", isAuth, async (req, res, next) => {
+router.get("/", requiresAuth(), async (req, res, next) => {
   console.log("cookies from get users: ",req.cookies);
   // #swagger.tags = ['User']
   // #swagger.description = "Get the logged in user."
@@ -37,7 +37,7 @@ router.get("/", isAuth, async (req, res, next) => {
 });
 
 // PUT endpoint to update user's first name and last name
-router.put("/update", isAuth, jsonParser, async (req, res) => {
+router.put("/update", requiresAuth(), jsonParser, async (req, res) => {
   const userId = req.user?.id; // Assuming you have middleware to authenticate and add user info
   const { firstName, lastName } = req.body;
 

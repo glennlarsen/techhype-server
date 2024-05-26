@@ -10,35 +10,16 @@ class UserService {
     this.CardProfile = db.CardProfile;
   }
 
-  async create(
-    firstName,
-    lastName,
-    email,
-    encryptedPassword,
-    salt,
-    verificationToken,
-    expirationTime
-  ) {
-    // First, create a new user
-    const user = await this.User.create({
-      FirstName: firstName,
-      LastName: lastName,
-      Email: email,
-      EncryptedPassword: encryptedPassword,
-      Salt: salt,
+  async create(user) {
+    return await this.User.create({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      encryptedPassword: user.hashedPassword,
+      salt: user.salt,
+      role: user.role || 'user',
+      verified: user.verified || false
     });
-
-    // Now, create a corresponding verification token and associate it with the user
-    const token = await this.createToken(
-      user.id,
-      verificationToken,
-      expirationTime
-    );
-
-    // You can add error handling here to make sure both user and token creation were successful
-
-    // Return the user (or other relevant information) if needed
-    return user;
   }
 
   async getAll() {

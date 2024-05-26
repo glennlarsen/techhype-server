@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const isAuth = require("./middleware/isAuth");
+const { requiresAuth } = require("express-openid-connect");
 var db = require("../models");
 var SocialMediaService = require("../services/SocialMediaService");
 var socialMediaService = new SocialMediaService(db);
@@ -11,7 +11,7 @@ var jsend = require("jsend");
 router.use(jsend.middleware);
 
 // GET endpoint to retrieve the social media links for a card profile
-router.get("/:profileId", isAuth, async (req, res) => {
+router.get("/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['SocialMedia']
   // #swagger.description = "get Social media for a card profile."
   const profileId = req.params.profileId;
@@ -36,7 +36,7 @@ router.get("/:profileId", isAuth, async (req, res) => {
 });
 
 // GET endpoint to retrieve the social media links by social media Id
-router.get("/:socialMediaId", isAuth, async (req, res) => {
+router.get("/:socialMediaId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['SocialMedia']
   // #swagger.description = "get Social media by using the socialmedia ID."
   const socialMediaId = req.params.socialMediaId;
@@ -52,7 +52,7 @@ router.get("/:socialMediaId", isAuth, async (req, res) => {
 });
 
 // POST/PUT endpoint to add or update an address for a card profile
-router.post("/:profileId", isAuth, async (req, res) => {
+router.post("/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['SocialMedia']
   // #swagger.description = "Add or update a social media for a card profile."
   /* #swagger.parameters['body'] =  {
@@ -100,7 +100,7 @@ router.post("/:profileId", isAuth, async (req, res) => {
 });
 
 // DELETE endpoint to delete the socialMedia for a card profile
-router.delete("/:profileId", isAuth, async (req, res) => {
+router.delete("/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['SocialMedia']
   // #swagger.description = "Delete a social media for a card profile."
   const profileId = req.params.profileId;

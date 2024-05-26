@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const isAuth = require("./middleware/isAuth");
+const { requiresAuth } = require("express-openid-connect");
 const generateCardUrl = require("./middleware/generateCardUrl");
 const uploadImage = require("./middleware/uploadImage");
 var db = require("../models");
@@ -13,7 +13,7 @@ var jsend = require("jsend");
 router.use(jsend.middleware);
 
 // GET endpoint to retrieve Cards for a specific user
-router.get("/", isAuth, async (req, res, next) => {
+router.get("/", requiresAuth(), async (req, res, next) => {
   // #swagger.tags = ['Card']
   // #swagger.description = "get all the logged in users cards."
   try {
@@ -38,7 +38,7 @@ router.get("/", isAuth, async (req, res, next) => {
 });
 
 // GET endpoint to retrieve cardProfiles for a specific card and user.
-router.get("/:cardId", isAuth, async (req, res) => {
+router.get("/:cardId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['CardProfile']
   // #swagger.description = "Retrieve cardProfiles for a specific card."
 
@@ -71,7 +71,7 @@ router.get("/:cardId", isAuth, async (req, res) => {
 });
 
 // Add a new card the logged in user
-router.post("/", isAuth, async (req, res) => {
+router.post("/", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['Card']
   // #swagger.description = "Creates a new card for the logged in user."
   /* #swagger.parameters['body'] =  {
@@ -124,7 +124,7 @@ router.post("/", isAuth, async (req, res) => {
 });
 
 // Update an existing card for the logged in user
-router.put("/:cardId", isAuth, async (req, res) => {
+router.put("/:cardId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['Card']
   // #swagger.description = "Update an existing card for the logged in user."
   /* #swagger.parameters['body'] =  {
@@ -177,7 +177,7 @@ router.put("/:cardId", isAuth, async (req, res) => {
 });
 
 // DELETE endpoint to delete a card
-router.delete("/:cardId", isAuth, async (req, res) => {
+router.delete("/:cardId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['Card']
   // #swagger.description = "Delete a card and its associated card profiles."
 
@@ -208,7 +208,7 @@ router.delete("/:cardId", isAuth, async (req, res) => {
 });
 
 // POST endpoint to add a new cardProfile to a card
-router.post("/:cardId", isAuth, uploadImage, async (req, res) => {
+router.post("/:cardId", requiresAuth(), uploadImage, async (req, res) => {
   // #swagger.tags = ['CardProfile']
   // #swagger.description = "Create a new cardProfile for a specific card with an image upload."
   // #swagger.consumes = ['multipart/form-data']
@@ -366,7 +366,7 @@ router.post("/:cardId", isAuth, uploadImage, async (req, res) => {
 });
 
 // PUT endpoint to update a cardProfile
-router.put("/:cardId/:profileId", isAuth, uploadImage, async (req, res) => {
+router.put("/:cardId/:profileId", requiresAuth(), uploadImage, async (req, res) => {
   // #swagger.tags = ['CardProfile']
   // #swagger.description = "Updates a cardProfile for a specific card."
   // #swagger.consumes = ['multipart/form-data']
@@ -494,7 +494,7 @@ router.put("/:cardId/:profileId", isAuth, uploadImage, async (req, res) => {
 });
 
 // DELETE endpoint to delete a card profile
-router.delete("/:cardId/:profileId", isAuth, async (req, res) => {
+router.delete("/:cardId/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['CardProfile']
   // #swagger.description = "Delete a card profile for a specific card."
 

@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const isAuth = require("./middleware/isAuth");
+const { requiresAuth } = require("express-openid-connect");
 var db = require("../models");
 var AddressService = require("../services/AddressService");
 var addressService = new AddressService(db);
@@ -11,7 +11,7 @@ var jsend = require("jsend");
 router.use(jsend.middleware);
 
 // GET endpoint to retrieve the address for a card profile
-router.get("/:profileId", isAuth, async (req, res) => {
+router.get("/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['Address']
   // #swagger.description = "get address for a card profile."
   const profileId = req.params.profileId;
@@ -36,7 +36,7 @@ router.get("/:profileId", isAuth, async (req, res) => {
 });
 
 // GET endpoint to retrieve the address by address Id (not working, does same as the one above)
-router.get("/:addressId", isAuth, async (req, res) => {
+router.get("/:addressId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['Address']
   // #swagger.description = "get address By using the address ID."
   const addressId = req.params.addressId;
@@ -52,7 +52,7 @@ router.get("/:addressId", isAuth, async (req, res) => {
 });
 
 // POST/PUT endpoint to add or update an address for a card profile
-router.post("/:profileId", isAuth, async (req, res) => {
+router.post("/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['Address']
   // #swagger.description = "Add or update an address for a card profile."
   /* #swagger.parameters['body'] =  {
@@ -98,7 +98,7 @@ router.post("/:profileId", isAuth, async (req, res) => {
 });
 
 // DELETE endpoint to delete the address for a card profile
-router.delete("/:profileId", isAuth, async (req, res) => {
+router.delete("/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['Address']
   // #swagger.description = "Delete an address for a card profile."
   const profileId = req.params.profileId;

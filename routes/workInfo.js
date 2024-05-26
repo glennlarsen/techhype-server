@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const isAuth = require("./middleware/isAuth");
+const { requiresAuth } = require("express-openid-connect");
 var db = require("../models");
 var WorkInfoService = require("../services/WorkInfoService");
 var workInfoService = new WorkInfoService(db);
@@ -11,7 +11,7 @@ var jsend = require("jsend");
 router.use(jsend.middleware);
 
 // GET endpoint to retrieve the workInfo for a card profile
-router.get("/:profileId", isAuth, async (req, res) => {
+router.get("/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['WorkInfo']
   // #swagger.description = "get Work info for a card profile."
   const profileId = req.params.profileId;
@@ -36,7 +36,7 @@ router.get("/:profileId", isAuth, async (req, res) => {
 });
 
 // GET endpoint to retrieve the Work info by workInfo Id
-router.get("/:workInfoId", isAuth, async (req, res) => {
+router.get("/:workInfoId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['WorkInfo']
   // #swagger.description = "get Work info By using the WorkInfo ID."
   const workInfoId = req.params.workInfoId;
@@ -52,7 +52,7 @@ router.get("/:workInfoId", isAuth, async (req, res) => {
 });
 
 // POST/PUT endpoint to add or update workInfo for a card profile
-router.post("/:profileId", isAuth, async (req, res) => {
+router.post("/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['WorkInfo']
   // #swagger.description = "Add or update Work info for a card profile."
   /* #swagger.parameters['body'] =  {
@@ -99,7 +99,7 @@ router.post("/:profileId", isAuth, async (req, res) => {
 });
 
 // DELETE endpoint to delete the workInfo for a card profile
-router.delete("/:profileId", isAuth, async (req, res) => {
+router.delete("/:profileId", requiresAuth(), async (req, res) => {
   // #swagger.tags = ['WorkInfo']
   // #swagger.description = "Delete Work info for a card profile."
   const profileId = req.params.profileId;
