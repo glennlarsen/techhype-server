@@ -20,8 +20,7 @@ const config = {
   secret: process.env.AUTH0_CLIENT_SECRET,
   baseURL: process.env.BASE_URL,
   clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
-  redirectUriPath: '/auth/callback' // Add this to specify the callback URL path
+  issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`
 };
 
 // Initialize Auth0 authentication middleware
