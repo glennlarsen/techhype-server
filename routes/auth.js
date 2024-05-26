@@ -27,12 +27,6 @@ const config = {
 // Initialize Auth0 authentication middleware
 router.use(auth(config));
 
-// GET route for login
-router.get("/login", (req, res) => {
-  console.log('GET /login route called, redirecting to Auth0 login');
-  res.oidc.login({ returnTo: '/' });
-});
-
 // Post for registered users to be able to login
 router.post("/login", authLimiter, jsonParser, (req, res) => {
   console.log('Login route called, redirecting to Auth0 login');
