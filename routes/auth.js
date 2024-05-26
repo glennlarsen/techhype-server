@@ -21,6 +21,7 @@ const config = {
   baseURL: process.env.BASE_URL,
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
+  redirectUriPath: '/auth/callback' // Add this to specify the callback URL path
 };
 
 // Initialize Auth0 authentication middleware
