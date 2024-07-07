@@ -59,8 +59,33 @@
       }
     },
     "/auth/login": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
       "post": {
         "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "default": {
             "description": ""
@@ -70,16 +95,6 @@
     },
     "/auth/callback": {
       "get": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/auth/logout": {
-      "post": {
         "description": "",
         "responses": {
           "default": {
@@ -117,6 +132,165 @@
         "responses": {
           "default": {
             "description": ""
+          }
+        }
+      }
+    },
+    "/auth/verify/{token}": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "Verifies the token sent to the user's email.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/refresh-token": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "refreshToken": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/forgotpassword": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/resetpassword/{token}": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "newPassword": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/google": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/google/callback": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/facebook": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "accessToken": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
@@ -163,10 +337,7 @@
     },
     "/cards/": {
       "get": {
-        "tags": [
-          "Card"
-        ],
-        "description": "get all the logged in users cards.",
+        "description": "",
         "responses": {
           "default": {
             "description": ""
@@ -174,16 +345,18 @@
         }
       },
       "post": {
-        "tags": [
-          "Card"
-        ],
-        "description": "Creates a new card for the logged in user.",
+        "description": "",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/Card"
+              "type": "object",
+              "properties": {
+                "name": {
+                  "example": "any"
+                }
+              }
             }
           }
         ],
@@ -196,10 +369,7 @@
     },
     "/cards/{cardId}": {
       "get": {
-        "tags": [
-          "CardProfile"
-        ],
-        "description": "Retrieve cardProfiles for a specific card.",
+        "description": "",
         "parameters": [
           {
             "name": "cardId",
@@ -215,10 +385,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Card"
-        ],
-        "description": "Update an existing card for the logged in user.",
+        "description": "",
         "parameters": [
           {
             "name": "cardId",
@@ -230,7 +397,18 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/Card"
+              "type": "object",
+              "properties": {
+                "name": {
+                  "example": "any"
+                },
+                "active": {
+                  "example": "any"
+                },
+                "designed": {
+                  "example": "any"
+                }
+              }
             }
           }
         ],
@@ -241,10 +419,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Card"
-        ],
-        "description": "Delete a card and its associated card profiles.",
+        "description": "",
         "parameters": [
           {
             "name": "cardId",
@@ -260,69 +435,12 @@
         }
       },
       "post": {
-        "tags": [
-          "CardProfile"
-        ],
-        "description": "Create a new cardProfile for a specific card with an image upload.",
-        "consumes": [
-          "multipart/form-data"
-        ],
+        "description": "",
         "parameters": [
           {
             "name": "cardId",
             "in": "path",
             "required": true,
-            "type": "string"
-          },
-          {
-            "name": "image",
-            "in": "formData",
-            "description": "Upload profile image.",
-            "type": "file"
-          },
-          {
-            "name": "name",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "title",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "firstName",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "lastName",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "birthday",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "phone",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "email",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "website",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "website2",
-            "in": "formData",
             "type": "string"
           },
           {
@@ -365,124 +483,6 @@
         "responses": {
           "400": {
             "description": "Bad Request"
-          }
-        }
-      }
-    },
-    "/cards/{cardId}/{profileId}": {
-      "put": {
-        "tags": [
-          "CardProfile"
-        ],
-        "description": "Updates a cardProfile for a specific card.",
-        "consumes": [
-          "multipart/form-data"
-        ],
-        "parameters": [
-          {
-            "name": "cardId",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "profileId",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "image",
-            "in": "formData",
-            "description": "Upload profile image.",
-            "type": "file"
-          },
-          {
-            "name": "name",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "title",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "firstName",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "lastName",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "birthday",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "phone",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "email",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "website",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "website2",
-            "in": "formData",
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "active": {
-                  "example": "any"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Bad Request"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "CardProfile"
-        ],
-        "description": "Delete a card profile for a specific card.",
-        "parameters": [
-          {
-            "name": "cardId",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "profileId",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": ""
           }
         }
       }

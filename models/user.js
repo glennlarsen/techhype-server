@@ -11,11 +11,11 @@ module.exports = (sequelize, Sequelize) => {
       },
       EncryptedPassword: {
         type: Sequelize.DataTypes.BLOB,
-        allowNull: false,
+        allowNull: true, // Allow null for Facebook login
       },
       Salt: {
         type: Sequelize.DataTypes.BLOB,
-        allowNull: false,
+        allowNull: true, // Allow null for Facebook login
       },
       Role: {
         type: Sequelize.DataTypes.STRING,

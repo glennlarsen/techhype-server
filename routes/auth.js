@@ -1,5 +1,7 @@
 const express = require("express");
-const router = express.Router();
+const passport = require("passport");
+const jwt = require("jsonwebtoken");
+const axios = require("axios");
 const crypto = require("crypto");
 const transporter = require("./middleware/nodemailer");
 const authLimiter = require("./middleware/authLimiter");
@@ -8,75 +10,49 @@ const jsend = require("jsend");
 const UserService = require("../services/UserService");
 const userService = new UserService(db);
 const bodyParser = require("body-parser");
+const verifyRefreshToken = require("./middleware/verifyRefreshToken");
 const jsonParser = bodyParser.json();
-const axios = require('axios');
-const { auth, requiresAuth } = require("express-openid-connect");
+require("../config/passport-config");
 
+const router = express.Router();
 router.use(jsend.middleware);
 
-const config = {
-  authRequired: false,
-  auth0Logout: true,
-  secret: process.env.AUTH0_CLIENT_SECRET,
-  baseURL: process.env.BASE_URL,
-  clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`
-};
-
-// Initialize Auth0 authentication middleware
-router.use(auth(config));
-
-// Post for registered users to be able to login
-router.post("/login", authLimiter, jsonParser, (req, res) => {
-  console.log('Login route called, redirecting to Auth0 login');
-  res.oidc.login({ returnTo: '/' });
-});
-
-// Route to handle the callback from Auth0
-router.get('/callback', requiresAuth(), async (req, res) => {
-  console.log('Callback route called from Auth0');
-  const user = req.oidc.user;
-  
-  // Find or create the user in your MySQL database
-  let dbUser = await userService.getOneByEmail(user.email);
-  
-  if (!dbUser) {
-    // If user doesn't exist in the database, create a new user
-    dbUser = await userService.create({
-      email: user.email,
-      firstName: user.given_name,
-      lastName: user.family_name,
-      role: 'user', // Set default role or based on your logic
-      verified: true // Assuming Auth0 has already verified the user
-    });
+router.get(
+  "/login",
+  passport.authenticate("auth0", {
+    scope: "openid email profile",
+  }),
+  (req, res) => {
+    res.redirect("/");
   }
+);
 
-  res.jsend.success({
-    result: "You are logged in",
-    id: dbUser.id,
-    email: dbUser.email,
-    name: dbUser.firstName,
-    role: dbUser.role,
-    verified: dbUser.verified
-  });
+// Auth0 callback route
+router.get("/callback", (req, res, next) => {
+  passport.authenticate("auth0", (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return res.redirect("/login");
+    }
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.TOKEN_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
+    );
+    res.cookie("jwt", token, { httpOnly: true, secure: true });
+    res.redirect("/cards");
+  })(req, res, next);
 });
 
-// Route for logout
-router.post('/logout', (req, res) => {
-  req.oidc.logout({ returnTo: process.env.BASE_URL });
-});
 
-// Post for new users to register / signup
 router.post("/signup", jsonParser, async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
-
-  // Define a regular expression pattern to validate the email.
   const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-  
-  // Define a regular expression pattern to validate the password.
-  const passwordPattern = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/;
+  const passwordPattern =
+    /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/;
 
-  // Check if the email meets the requirements
   if (!emailPattern.test(email)) {
     return res.jsend.fail({
       statusCode: 400,
@@ -84,68 +60,481 @@ router.post("/signup", jsonParser, async (req, res) => {
     });
   }
 
-  // Check if the password meets the requirements
   if (!passwordPattern.test(password)) {
     return res.jsend.fail({
       statusCode: 400,
-      message: "Password requirements not met. It must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      message:
+        "Password requirements not met. It must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
     });
   }
 
-  // Check if the user already exists in your database
-  let user = await userService.getOneByEmail(email);
-  if (user != null) {
-    return res.jsend.fail({
-      statusCode: 409,
-      email: "Provided email is already in use.",
-    });
-  }
-
-  // Create the user in Auth0
   try {
-    const auth0User = await axios.post(`https://${process.env.AUTH0_DOMAIN}/dbconnections/signup`, {
-      client_id: process.env.AUTH0_CLIENT_ID,
-      email: email,
-      password: password,
-      connection: 'Username-Password-Authentication', // Make sure this matches your Auth0 DB connection
-      user_metadata: {
-        firstName: firstName,
-        lastName: lastName
-      }
-    });
-
-    // Create the user in your local database
     const salt = crypto.randomBytes(16);
     const hashedPassword = await new Promise((resolve, reject) => {
-      crypto.pbkdf2(password, salt, 310000, 32, "sha256", (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result);
+      crypto.pbkdf2(
+        password,
+        salt,
+        310000,
+        32,
+        "sha256",
+        (err, hashedPassword) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(hashedPassword);
+          }
         }
-      });
+      );
     });
 
-    user = await userService.create({
+    const missingAttributes = [];
+
+    if (firstName == null) {
+      missingAttributes.push("FirstName");
+    }
+
+    if (lastName == null) {
+      missingAttributes.push("LastName");
+    }
+
+    if (email == null) {
+      missingAttributes.push("Email");
+    }
+
+    if (password == null) {
+      missingAttributes.push("Password");
+    }
+
+    if (missingAttributes.length > 0) {
+      const errorMessage =
+        "These attributes are required: " + missingAttributes.join(", ") + ".";
+      return res.jsend.fail({ statusCode: 400, message: errorMessage });
+    }
+    var user = await userService.getOneByEmail(email);
+    if (user != null) {
+      return res.jsend.fail({
+        statusCode: 409,
+        email: "Provided email is already in use.",
+      });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const expirationTime = new Date();
+    expirationTime.setHours(expirationTime.getHours() + 24); // 24-hour expiration
+
+    const newUser = await userService.create(
       firstName,
       lastName,
       email,
       hashedPassword,
       salt,
-      verified: true // Assuming Auth0 handles email verification
-    });
+      verificationToken,
+      expirationTime
+    );
 
+    // Send a verification email to the user
+    const mailOptions = {
+      from: process.env.NODEMAILER_USER, // Sender's email address
+      to: email, // Recipient's email address (user's email)
+      subject: "Email Verification - Techhype",
+      html: `
+      <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+          <td align="center">
+            <h1 style="color: black;">Thank you for signing up on Techhype!</h1>
+            <p style="color: black;">To verify your email, please click the button below:</p>
+            <a href="${process.env.BASE_URL}/auth/verify/${verificationToken}" style="text-decoration: none; background-color: #54d4c6; color: black; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; display: inline-block; font-weight: bold;">
+              Verify Email
+            </a>
+          </td>
+        </tr>
+      </table>
+    `, // Design the verification email in this HTML
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    console.log("Email verification sent");
+    // Return a success response to the user
     res.jsend.success({
       statusCode: 201,
-      result: "You created an account. Please check your email for verification instructions.",
+      result:
+        "You created an account. Please check your email for verification instructions.",
     });
   } catch (error) {
-    console.error("Auth0 signup error:", error.response.data);
+    console.error("Email verification error:", error);
     res.jsend.fail({
-      statusCode: 500,
-      result: error.response.data,
+      statusCode: 401,
+      result: error,
     });
   }
 });
+
+// Create a route for email verification
+router.get("/verify/:token", async (req, res) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.description = "Verifies the token sent to the user's email."
+  const { token } = req.params;
+
+  try {
+    const user = await userService.verifyToken(token);
+    console.log("user: ", user);
+
+    if (!user) {
+      // Token is invalid or has expired
+      return res.jsend.fail({
+        statusCode: 400,
+        message: "Invalid token, expired token or already verified email.",
+      });
+    }
+
+    // Update the user's "Verified" field to mark the email as verified
+    await user.update({ Verified: true });
+
+    // Render the email is verified page
+    return res.render("emailVerified", { user });
+  } catch (error) {
+    console.error("Email verification error:", error);
+    return res.jsend.error("Email verification failed");
+  }
+});
+
+router.post("/login", authLimiter, jsonParser, async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.jsend.fail({
+      statusCode: 400,
+      result: "Email and password are required",
+    });
+  }
+
+  const user = await userService.getOneByEmail(email);
+  if (!user) {
+    return res.jsend.fail({
+      statusCode: 400,
+      result: "Incorrect email or password",
+    });
+  }
+
+  if (!user.Verified) {
+    return res.jsend.fail({
+      statusCode: 400,
+      result: "Please verify your email before logging in.",
+    });
+  }
+
+  crypto.pbkdf2(
+    password,
+    user.Salt,
+    310000,
+    32,
+    "sha256",
+    (err, hashedPassword) => {
+      if (err) {
+        return res.jsend.error("Error in password encryption");
+      }
+      if (!crypto.timingSafeEqual(user.EncryptedPassword, hashedPassword)) {
+        return res.jsend.fail({ result: "Incorrect password" });
+      }
+
+      const token = jwt.sign(
+        { id: user.id, email: user.Email },
+        process.env.TOKEN_SECRET,
+        { expiresIn: process.env.JWT_EXPIRATION }
+      );
+
+      const refreshToken = jwt.sign(
+        { id: user.id },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: process.env.JWT_EXPIRATION_LONG }
+      );
+
+      res.cookie("jwt", token, { httpOnly: true, secure: true });
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+      });
+
+      res.jsend.success({
+        result: "You are logged in",
+        token: token,
+        refreshToken: refreshToken,
+        id: user.id,
+        email: user.Email,
+        name: user.FirstName,
+        role: user.Role,
+        verified: user.Verified,
+      });
+    }
+  );
+});
+
+// Example logout route
+router.post("/logout", async (req, res) => {
+  try {
+    // Clear cookies for JWT and refreshToken
+    res.clearCookie("jwt");
+    res.clearCookie("refreshToken");
+
+    // Additional logout handling logic if needed
+    res.jsend.success({
+      statusCode: 200,
+      message: "User logged out successfully.",
+    });
+  } catch (error) {
+    console.error("Exception during logout:", error);
+    res.jsend.error({
+      statusCode: 500,
+      message: "An error occurred during logout.",
+      error: error.message,
+    });
+  }
+});
+
+
+
+//refresh token
+router.post("/refresh-token", verifyRefreshToken, async (req, res) => {
+  const { id } = req.user;
+  console.log("user: ", id);
+
+  try {
+    const user = await userService.getOne(id);
+
+    if (!user) {
+      return res.status(401).jsend.fail({
+        message: "Invalid refresh token",
+      });
+    }
+
+    const newToken = jwt.sign(
+      { id: user.id, email: user.Email },
+      process.env.TOKEN_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
+    );
+
+    const newRefreshToken = jwt.sign(
+      { id: user.id },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION_LONG }
+    );
+
+    res.cookie("jwt", newToken, { httpOnly: true, secure: true });
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+    });
+
+    res.jsend.success({
+      token: newToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (error) {
+    res.status(401).jsend.fail({
+      message: "Invalid refresh token",
+    });
+  }
+});
+
+//Forgot password
+router.post("/forgotpassword", jsonParser, async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.jsend.fail({ statusCode: 400, message: "Email is required." });
+  }
+
+  const user = await userService.getOneByEmail(email);
+
+  if (!user) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message: "User with this email does not exist.",
+    });
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const expirationTime = new Date();
+  expirationTime.setHours(expirationTime.getHours() + 1); // 1-hour expiration
+
+  await userService.createToken(user.id, resetToken, expirationTime);
+
+  const resetLink = `${process.env.BASE_URL}/auth/resetpassword/${resetToken}`;
+  const mailOptions = {
+    from: process.env.NODEMAILER_USER,
+    to: email,
+    subject: "Password Reset - Techhype",
+    html: `
+      <p>You requested a password reset for your Techhype account.</p>
+      <p>To reset your password, please click on the following link:</p>
+      <a href="${resetLink}" target="_blank">Reset Password</a>
+      <p>If you did not request a password reset, please ignore this email.</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.jsend.success({
+      statusCode: 200,
+      message: "Password reset link sent to your email.",
+    });
+  } catch (error) {
+    res.jsend.fail({
+      statusCode: 500,
+      message: "Failed to send password reset email.",
+    });
+  }
+});
+
+//Reset password
+router.post("/resetpassword/:token", jsonParser, async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  const passwordPattern =
+    /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/;
+
+  if (!newPassword) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message: "New password is required.",
+    });
+  }
+
+  if (!passwordPattern.test(newPassword)) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message:
+        "Password requirements not met. It must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+    });
+  }
+
+  const tokenRecord = await userService.getToken(token);
+
+  if (!tokenRecord) {
+    return res.jsend.fail({
+      statusCode: 400,
+      message:
+        "Invalid or expired password reset link. Please request a new one.",
+    });
+  }
+
+  const user = await userService.getUserFromToken(token);
+
+  const newSalt = crypto.randomBytes(16);
+  const newHashedPassword = await new Promise((resolve, reject) => {
+    crypto.pbkdf2(newPassword, newSalt, 310000, 32, "sha256", (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+
+  user.EncryptedPassword = newHashedPassword;
+  user.Salt = newSalt;
+
+  await userService.clearToken(token);
+
+  try {
+    await user.save();
+    res.jsend.success({
+      statusCode: 200,
+      message:
+        "Password reset successful. You can now log in with your new password.",
+    });
+  } catch (error) {
+    res.jsend.fail({
+      statusCode: 500,
+      message: "Failed to reset the password.",
+    });
+  }
+});
+
+// Google Authentication Routes
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+router.get("/google/callback", (req, res, next) => {
+  passport.authenticate("google", (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return res.redirect("/login");
+    }
+    req.logIn(user, (err) => {
+      if (err) {
+        return next(err);
+      }
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.TOKEN_SECRET,
+        { expiresIn: process.env.JWT_EXPIRATION }
+      );
+      res.cookie("jwt", token, { httpOnly: true, secure: true });
+      res.redirect("/cards");
+    });
+  })(req, res, next);
+});
+
+// Facebook Authentication Routes
+router.post("/facebook", async (req, res) => {
+  const { accessToken } = req.body;
+
+  try {
+    // Verify the access token with Facebook
+    const fbResponse = await axios.get(
+      `https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email`
+    );
+
+
+    const { id, name, email } = fbResponse.data;
+    if (!email) {
+      return res
+        .status(400)
+        .json({ status: "fail", message: "Email not available from Facebook" });
+    }
+
+    // Find or create a user in your database
+    let user = await userService.getOneByEmail(email);
+    if (!user) {
+      const nameParts = name.split(" ");
+      // Correctly pass parameters to userService.create
+      user = await userService.create(
+        nameParts[0], // firstName
+        nameParts.slice(1).join(" "), // lastName
+        email,
+        null, // hashedPassword (since password is not needed for Facebook login)
+        null, // salt (since password is not needed for Facebook login)
+        true,
+      );
+    }
+
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: process.env.JWT_EXPIRATION,
+      }
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        token: token,
+      },
+    });
+  } catch (error) {
+    console.error("Facebook login error:", error);
+    res.status(500).json({ status: "fail", message: "Facebook login failed" });
+  }
+});
+
 
 module.exports = router;

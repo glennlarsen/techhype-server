@@ -19,9 +19,9 @@ class CardService {
     };
   }
 
-  async getOne(name) {
+  async getOne(name, userId) {
     const card = await this.Card.findOne({
-      where: { Name: name },
+      where: { Name: name, userId: userId },
     });
     return {
       success: true,

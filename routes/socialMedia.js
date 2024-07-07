@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const { requiresAuth } = require("express-openid-connect");
+const passport = require("passport");
 var db = require("../models");
 var SocialMediaService = require("../services/SocialMediaService");
 var socialMediaService = new SocialMediaService(db);
@@ -10,8 +10,11 @@ var jsend = require("jsend");
 
 router.use(jsend.middleware);
 
+// Authenticate with JWT for all routes in this router
+router.use(passport.authenticate('jwt', { session: false }));
+
 // GET endpoint to retrieve the social media links for a card profile
-router.get("/:profileId", requiresAuth(), async (req, res) => {
+router.get("/:profileId", async (req, res) => {
   // #swagger.tags = ['SocialMedia']
   // #swagger.description = "get Social media for a card profile."
   const profileId = req.params.profileId;
@@ -36,7 +39,7 @@ router.get("/:profileId", requiresAuth(), async (req, res) => {
 });
 
 // GET endpoint to retrieve the social media links by social media Id
-router.get("/:socialMediaId", requiresAuth(), async (req, res) => {
+router.get("/:socialMediaId", async (req, res) => {
   // #swagger.tags = ['SocialMedia']
   // #swagger.description = "get Social media by using the socialmedia ID."
   const socialMediaId = req.params.socialMediaId;
@@ -52,7 +55,7 @@ router.get("/:socialMediaId", requiresAuth(), async (req, res) => {
 });
 
 // POST/PUT endpoint to add or update an address for a card profile
-router.post("/:profileId", requiresAuth(), async (req, res) => {
+router.post("/:profileId", async (req, res) => {
   // #swagger.tags = ['SocialMedia']
   // #swagger.description = "Add or update a social media for a card profile."
   /* #swagger.parameters['body'] =  {
@@ -100,7 +103,7 @@ router.post("/:profileId", requiresAuth(), async (req, res) => {
 });
 
 // DELETE endpoint to delete the socialMedia for a card profile
-router.delete("/:profileId", requiresAuth(), async (req, res) => {
+router.delete("/:profileId", async (req, res) => {
   // #swagger.tags = ['SocialMedia']
   // #swagger.description = "Delete a social media for a card profile."
   const profileId = req.params.profileId;

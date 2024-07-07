@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const { requiresAuth } = require("express-openid-connect");
+const passport = require("passport");
 var db = require("../models");
 var UserService = require("../services/UserService");
 var userService = new UserService(db);
@@ -10,13 +10,17 @@ var jsend = require("jsend");
 
 router.use(jsend.middleware);
 
+// Authenticate with JWT for all routes in this router
+router.use(passport.authenticate('jwt', { session: false }));
+
 /* GET users listing. */
-router.get("/", requiresAuth(), async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   console.log("cookies from get users: ",req.cookies);
+
   // #swagger.tags = ['User']
   // #swagger.description = "Get the logged in user."
   try {
-    const userId = req.user?.id ?? 0;
+    const userId = req.user?.user?.dataValues?.id ?? 0;
     const user = await userService.getOne(userId);
     if (user.success) {
       res.jsend.success({ statusCode: 200, result: user });
@@ -37,8 +41,8 @@ router.get("/", requiresAuth(), async (req, res, next) => {
 });
 
 // PUT endpoint to update user's first name and last name
-router.put("/update", requiresAuth(), jsonParser, async (req, res) => {
-  const userId = req.user?.id; // Assuming you have middleware to authenticate and add user info
+router.put("/update", jsonParser, async (req, res) => {
+  const userId = req.user?.user?.dataValues?.id ?? 0; // Assuming you have middleware to authenticate and add user info
   const { firstName, lastName } = req.body;
 
   if (!firstName && !lastName) {
