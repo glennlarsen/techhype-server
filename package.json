@@ -25,6 +25,7 @@
     "express-openid-connect": "^2.17.1",
     "express-rate-limit": "^7.1.2",
     "express-session": "^1.18.0",
+    "heroku": "^8.11.5",
     "http-errors": "~1.6.3",
     "jsend": "^1.1.0",
     "jsonwebtoken": "^9.0.2",
