@@ -11,14 +11,7 @@ class UserService {
   }
 
   async create(
-    firstName,
-    lastName,
-    email,
-    hashedPassword,
-    salt,
-    verified,
-    verificationToken, 
-    expirationTime
+    firstName, lastName, email, hashedPassword = null, salt = null, verified = false, verificationToken = null, expirationTime = null
   ) {
     try {
     console.log("first name:", firstName);

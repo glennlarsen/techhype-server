@@ -491,7 +491,6 @@ router.post("/facebook", async (req, res) => {
       `https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email`
     );
 
-
     const { id, name, email } = fbResponse.data;
     if (!email) {
       return res
@@ -503,17 +502,15 @@ router.post("/facebook", async (req, res) => {
     let user = await userService.getOneByEmail(email);
     if (!user) {
       const nameParts = name.split(" ");
-      // Correctly pass parameters to userService.create
       user = await userService.create(
         nameParts[0], // firstName
         nameParts.slice(1).join(" "), // lastName
         email,
         null, // hashedPassword (since password is not needed for Facebook login)
         null, // salt (since password is not needed for Facebook login)
-        true,
+        true // verified
       );
     }
-
 
     // Generate JWT token
     const token = jwt.sign(
@@ -528,6 +525,12 @@ router.post("/facebook", async (req, res) => {
       status: "success",
       data: {
         token: token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.FirstName,
+          lastName: user.LastName,
+        },
       },
     });
   } catch (error) {

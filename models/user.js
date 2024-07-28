@@ -2,10 +2,16 @@ module.exports = (sequelize, Sequelize) => {
   const User = sequelize.define(
     "User",
     {
-      FirstName: Sequelize.DataTypes.STRING,
-      LastName: Sequelize.DataTypes.STRING,
+      FirstName: {
+        type: Sequelize.DataTypes.STRING(255),
+        allowNull: false,
+      },
+      LastName: {
+        type: Sequelize.DataTypes.STRING(255),
+        allowNull: false,
+      },
       Email: {
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.DataTypes.STRING(255),
         allowNull: false,
         unique: true,
       },
@@ -18,7 +24,7 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: true, // Allow null for Facebook login
       },
       Role: {
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.DataTypes.STRING(50),
         defaultValue: "User",
       },
       Verified: {
@@ -30,6 +36,7 @@ module.exports = (sequelize, Sequelize) => {
       timestamps: false,
     }
   );
+
   User.associate = function (models) {
     User.hasMany(models.Card, { foreignKey: "UserId", onDelete: "CASCADE" });
   };
