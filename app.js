@@ -52,6 +52,7 @@ const corsOptions = {
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
+app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(logger("dev"));
 app.use(express.json());
@@ -68,7 +69,7 @@ app.use("/address", AddressRouter);
 app.use("/workInfo", WorkInfoRouter);
 app.use("/socialMedia", SocialMediaRouter);
 
-app.use(bodyParser.json());
+
 app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 
