@@ -122,15 +122,21 @@ router.post("/signup", jsonParser, async (req, res) => {
     const expirationTime = new Date();
     expirationTime.setHours(expirationTime.getHours() + 24); // 24-hour expiration
 
-    const newUser = await userService.create(
-      firstName,
-      lastName,
-      email,
-      hashedPassword,
-      salt,
-      verificationToken,
-      expirationTime
-    );
+  // Create user and token
+  const newUser = await userService.create(
+    firstName,
+    lastName,
+    email,
+    hashedPassword,
+    salt
+  );
+
+  // Now, create a corresponding verification token
+  await userService.createToken(
+    newUser.id,
+    verificationToken,
+    expirationTime
+  );
 
     // Send a verification email to the user
     const mailOptions = {
