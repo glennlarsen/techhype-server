@@ -184,26 +184,38 @@ router.get("/verify/:token", async (req, res) => {
 
   try {
     const user = await userService.verifyToken(token);
-    console.log("user: ", user);
 
     if (!user) {
-      // Token is invalid or has expired
-      return res.jsend.fail({
-        statusCode: 400,
-        message: "Invalid token, expired token or already verified email.",
+      // Token is invalid, expired, or already used
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid token, expired token, or already verified email.",
       });
     }
 
     // Update the user's "Verified" field to mark the email as verified
     await user.update({ Verified: true });
 
-    // Render the email is verified page
-    return res.render("emailVerified", { user });
+    // Return JSON response indicating success
+    return res.json({
+      status: "success",
+      message: "Email successfully verified.",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        verified: user.Verified,
+      },
+    });
   } catch (error) {
     console.error("Email verification error:", error);
-    return res.jsend.error("Email verification failed");
+    return res.status(500).json({
+      status: "error",
+      message: "Email verification failed",
+    });
   }
 });
+
 
 router.post("/login", authLimiter, jsonParser, async (req, res) => {
   const { email, password } = req.body;
