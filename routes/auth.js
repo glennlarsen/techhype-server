@@ -484,6 +484,7 @@ router.get("/google/callback", (req, res, next) => {
 // Facebook Authentication Routes
 router.post("/facebook", async (req, res) => {
   const { accessToken } = req.body;
+  console.log("accesstoken backend: ", accessToken);
 
   try {
     // Verify the access token with Facebook
