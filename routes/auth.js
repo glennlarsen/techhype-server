@@ -534,7 +534,7 @@ router.post("/facebook", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Facebook login error:", error);
+    console.error("Facebook login error:", error.response ? error.response.data : error.message);
     res.status(500).json({ status: "fail", message: "Facebook login failed" });
   }
 });
