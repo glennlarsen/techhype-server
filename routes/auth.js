@@ -499,7 +499,7 @@ router.get('/google/callback', (req, res, next) => {
       res.cookie("jwt", token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
       
       // Redirect to a secured route or home page
-      res.redirect("/cards");
+      res.redirect("/dashboard");
     } catch (err) {
       next(err);
     }
