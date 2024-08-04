@@ -46,7 +46,6 @@ router.get("/callback", (req, res, next) => {
   })(req, res, next);
 });
 
-
 router.post("/signup", jsonParser, async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
@@ -122,21 +121,21 @@ router.post("/signup", jsonParser, async (req, res) => {
     const expirationTime = new Date();
     expirationTime.setHours(expirationTime.getHours() + 24); // 24-hour expiration
 
-  // Create user and token
-  const newUser = await userService.create(
-    firstName,
-    lastName,
-    email,
-    hashedPassword,
-    salt
-  );
+    // Create user and token
+    const newUser = await userService.create(
+      firstName,
+      lastName,
+      email,
+      hashedPassword,
+      salt
+    );
 
-  // Now, create a corresponding verification token
-  await userService.createToken(
-    newUser.id,
-    verificationToken,
-    expirationTime
-  );
+    // Now, create a corresponding verification token
+    await userService.createToken(
+      newUser.id,
+      verificationToken,
+      expirationTime
+    );
 
     // Send a verification email to the user
     const mailOptions = {
@@ -215,7 +214,6 @@ router.get("/verify/:token", async (req, res) => {
     });
   }
 });
-
 
 router.post("/login", authLimiter, jsonParser, async (req, res) => {
   const { email, password } = req.body;
@@ -308,8 +306,6 @@ router.post("/logout", async (req, res) => {
     });
   }
 });
-
-
 
 //refresh token
 router.post("/refresh-token", verifyRefreshToken, async (req, res) => {
@@ -477,7 +473,7 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-router.get('/google/callback', (req, res, next) => {
+router.get("/google/callback", (req, res, next) => {
   passport.authenticate("google", async (err, user, info) => {
     if (err) {
       return next(err);
@@ -485,7 +481,7 @@ router.get('/google/callback', (req, res, next) => {
     if (!user) {
       return res.redirect("/login");
     }
-    
+
     try {
       // Here, you have the authenticated user object
       // Generate JWT token
@@ -494,18 +490,31 @@ router.get('/google/callback', (req, res, next) => {
         process.env.TOKEN_SECRET,
         { expiresIn: process.env.JWT_EXPIRATION }
       );
-      
+
       // Set JWT token in cookie
-      res.cookie("jwt", token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
-      
-      // Redirect to a secured route or home page
-      res.redirect("/dashboard");
+      res.cookie("jwt", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      // Return JSON response
+      res.status(200).json({
+        status: "success",
+        data: {
+          token: token,
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName, // Ensure these match the user object structure
+            lastName: user.lastName,
+          },
+        },
+      });
     } catch (err) {
       next(err);
     }
   })(req, res, next);
 });
-
 
 // Facebook Authentication Routes
 router.post("/facebook", async (req, res) => {
@@ -561,10 +570,12 @@ router.post("/facebook", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Facebook login error:", error.response ? error.response.data : error.message);
+    console.error(
+      "Facebook login error:",
+      error.response ? error.response.data : error.message
+    );
     res.status(500).json({ status: "fail", message: "Facebook login failed" });
   }
 });
-
 
 module.exports = router;

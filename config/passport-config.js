@@ -79,6 +79,8 @@ passport.use(new GoogleStrategy(
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
+      console.log('Google profile:', profile); // Log the profile to inspect its structure
+      
       const { emails, name } = profile;
       const email = emails[0].value;
       const firstName = name.givenName;
