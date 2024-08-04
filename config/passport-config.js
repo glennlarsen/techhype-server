@@ -85,13 +85,14 @@ passport.use(
         let user = await userService.getOneByEmail(profile.emails[0].value);
 
         if (!user) {
-          user = await userService.create({
-            email: profile.emails[0].value,
-            firstName: profile.name.givenName,
-            lastName: profile.name.familyName,
-            role: "user",
-            verified: true,
-          });
+          user = await userService.create(
+            profile.name.givenName, // firstName
+            profile.name.familyName, // lastName
+            profile.emails[0].value, // email
+            null, // hashedPassword (since password is not needed for Facebook login)
+            null, // salt (since password is not needed for Facebook login)
+            true
+          );
         }
 
         done(null, user);
@@ -116,13 +117,14 @@ passport.use(
         let user = await userService.getOneByEmail(profile.emails[0].value);
 
         if (!user) {
-          user = await userService.create({
-            email: profile.emails[0].value,
-            firstName: profile.name.givenName,
-            lastName: profile.name.familyName,
-            role: "user",
-            verified: true,
-          });
+          user = await userService.create(
+            profile.emails[0].value,
+            profile.name.givenName,
+            profile.name.familyName,
+            null, // hashedPassword (since password is not needed for Facebook login)
+            null, // salt (since password is not needed for Facebook login)
+            true
+          );
         }
 
         done(null, user);
