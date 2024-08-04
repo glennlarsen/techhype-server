@@ -467,7 +467,6 @@ router.post("/resetpassword/:token", jsonParser, async (req, res) => {
 });
 
 // Google Authentication Routes
-// Google Authentication Routes
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
