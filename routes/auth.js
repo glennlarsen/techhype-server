@@ -377,7 +377,7 @@ router.post("/forgotpassword", jsonParser, async (req, res) => {
 
   await userService.createToken(user.id, resetToken, expirationTime);
 
-  const resetLink = `${process.env.FRONTEND_BASE_URL}/auth/resetpassword/${resetToken}`;
+  const resetLink = `${process.env.FRONTEND_BASE_URL}/resetpassword/${resetToken}`;
   const mailOptions = {
     from: process.env.NODEMAILER_USER,
     to: email,
