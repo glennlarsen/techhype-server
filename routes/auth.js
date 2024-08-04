@@ -479,7 +479,7 @@ router.get("/google/callback", (req, res, next) => {
       return next(err);
     }
     if (!user) {
-      return res.redirect("/login");
+      return res.status(401).json({ status: 'fail', message: 'Authentication failed' });
     }
 
     try {
