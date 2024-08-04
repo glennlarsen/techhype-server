@@ -81,23 +81,14 @@ passport.use(
       try {
         console.log("Google profile:", profile); // Log the profile to inspect its structure
 
-        const { emails, name } = profile;
-        if (!emails || emails.length === 0) {
-          return done(new Error("No email found in Google profile"), null);
-        }
-
-        const email = emails[0].value;
-        const firstName = name.givenName || ""; // Ensure these are strings
-        const lastName = name.familyName || "";
-
         // Find or create user
-        let user = await userService.getOneByEmail(email);
+        let user = await userService.getOneByEmail(profile.emails[0].value);
 
         if (!user) {
           user = await userService.create({
-            email,
-            firstName,
-            lastName,
+            email: profile.emails[0].value,
+            firstName: profile.name.givenName,
+            lastName: profile.name.familyName,
             role: "user",
             verified: true,
           });
