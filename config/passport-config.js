@@ -72,31 +72,37 @@ passport.use(
 
 // Google Strategy
 passport.use(new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.BASE_URL}/auth/google/callback`,
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        let user = await userService.getOneByEmail(profile.emails[0].value);
-  
-        if (!user) {
-          user = await userService.create({
-            email: profile.emails[0].value,
-            firstName: profile.name.givenName,
-            lastName: profile.name.familyName,
-            role: 'user',
-            verified: true,
-          });
-        }
-  
-        done(null, user);
-      } catch (error) {
-        done(error, null);
+  {
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: `${process.env.BASE_URL}/auth/google/callback`,
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      const { emails, name } = profile;
+      const email = emails[0].value;
+      const firstName = name.givenName;
+      const lastName = name.familyName;
+
+      // Find or create user
+      let user = await userService.getOneByEmail(email);
+      
+      if (!user) {
+        user = await userService.create({
+          email,
+          firstName,
+          lastName,
+          role: 'user',
+          verified: true,
+        });
       }
+
+      done(null, user);
+    } catch (error) {
+      done(error, null);
     }
-  ));
+  }
+));
 
   // Facebook Strategy
 passport.use(new FacebookStrategy(

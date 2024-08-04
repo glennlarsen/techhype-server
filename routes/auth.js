@@ -471,33 +471,41 @@ router.post("/resetpassword/:token", jsonParser, async (req, res) => {
 });
 
 // Google Authentication Routes
+// Google Authentication Routes
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-router.get("/google/callback", (req, res, next) => {
-  passport.authenticate("google", (err, user, info) => {
+router.get('/google/callback', (req, res, next) => {
+  passport.authenticate("google", async (err, user, info) => {
     if (err) {
       return next(err);
     }
     if (!user) {
       return res.redirect("/login");
     }
-    req.logIn(user, (err) => {
-      if (err) {
-        return next(err);
-      }
+    
+    try {
+      // Here, you have the authenticated user object
+      // Generate JWT token
       const token = jwt.sign(
         { id: user.id, email: user.email },
         process.env.TOKEN_SECRET,
         { expiresIn: process.env.JWT_EXPIRATION }
       );
-      res.cookie("jwt", token, { httpOnly: true, secure: true });
+      
+      // Set JWT token in cookie
+      res.cookie("jwt", token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+      
+      // Redirect to a secured route or home page
       res.redirect("/cards");
-    });
+    } catch (err) {
+      next(err);
+    }
   })(req, res, next);
 });
+
 
 // Facebook Authentication Routes
 router.post("/facebook", async (req, res) => {
