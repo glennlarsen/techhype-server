@@ -407,19 +407,19 @@ router.post("/forgotpassword", jsonParser, async (req, res) => {
 //Reset password
 router.post("/resetpassword/:token", jsonParser, async (req, res) => {
   const { token } = req.params;
-  const { newPassword } = req.body;
+  const { password } = req.body;
 
   const passwordPattern =
     /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/;
 
-  if (!newPassword) {
+  if (!password) {
     return res.jsend.fail({
       statusCode: 400,
       message: "New password is required.",
     });
   }
 
-  if (!passwordPattern.test(newPassword)) {
+  if (!passwordPattern.test(password)) {
     return res.jsend.fail({
       statusCode: 400,
       message:
@@ -441,7 +441,7 @@ router.post("/resetpassword/:token", jsonParser, async (req, res) => {
 
   const newSalt = crypto.randomBytes(16);
   const newHashedPassword = await new Promise((resolve, reject) => {
-    crypto.pbkdf2(newPassword, newSalt, 310000, 32, "sha256", (err, result) => {
+    crypto.pbkdf2(password, newSalt, 310000, 32, "sha256", (err, result) => {
       if (err) {
         reject(err);
       } else {
