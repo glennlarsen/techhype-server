@@ -496,19 +496,7 @@ router.get("/google/callback", (req, res, next) => {
         secure: process.env.NODE_ENV === "production",
       });
 
-      // Return JSON response
-      res.status(200).json({
-        status: "success",
-        data: {
-          token: token,
-          user: {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName, // Ensure these match the user object structure
-            lastName: user.lastName,
-          },
-        },
-      });
+      res.redirect('/dashboard');
     } catch (err) {
       next(err);
     }
