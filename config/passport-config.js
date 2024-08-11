@@ -48,7 +48,10 @@ passport.use(
 passport.use(
   new JwtStrategy(
     {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (req) => {
+        // Extract JWT from cookies
+        return req && req.cookies ? req.cookies.jwt : null;
+      },
       secretOrKey: process.env.TOKEN_SECRET,
     },
     async (jwtPayload, done) => {
@@ -68,6 +71,7 @@ passport.use(
     }
   )
 );
+
 
 // Google Strategy
 passport.use(

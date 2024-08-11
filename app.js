@@ -44,7 +44,6 @@ const corsOptions = {
     "https://techhype.netlify.app",
     "https://techhype.no",
     "https://techhype-server-06db1c82ee3e.herokuapp.com",
-    "https://techhype-server-06db1c82ee3e.herokuapp.com/auth/facebook",
   ],
   preflightContinue: false,
   optionsSuccessStatus: 204,
