@@ -496,19 +496,15 @@ router.get("/google/callback", (req, res, next) => {
         secure: process.env.NODE_ENV === "production",
       });
 
-      // Return JSON response
-      res.status(200).json({
-        status: "success",
-        data: {
-          token: token,
-          user: {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName, // Ensure these match the user object structure
-            lastName: user.lastName,
-          },
-        },
-      });
+   // Redirect to frontend with token as a query parameter
+   const redirectUrl = url.format({
+    pathname: process.env.FRONTEND_BASE_URL + "/auth-success",
+    query: {
+      token: token,
+    },
+  });
+
+  res.redirect(redirectUrl);
     } catch (err) {
       next(err);
     }
