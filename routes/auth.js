@@ -482,7 +482,6 @@ router.get("/google/callback", (req, res, next) => {
     }
 
     try {
-      // Here, you have the authenticated user object
       // Generate JWT token
       const token = jwt.sign(
         { id: user.id, email: user.email },
@@ -490,26 +489,21 @@ router.get("/google/callback", (req, res, next) => {
         { expiresIn: process.env.JWT_EXPIRATION }
       );
 
-      // Set JWT token in cookie
+      // Set JWT token in a secure, HTTP-only cookie
       res.cookie("jwt", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
       });
 
-   // Redirect to frontend with token as a query parameter
-   const redirectUrl = url.format({
-    pathname: process.env.FRONTEND_BASE_URL + "/auth-success",
-    query: {
-      token: token,
-    },
-  });
-
-  res.redirect(redirectUrl);
+      // Redirect to frontend without the token in the URL
+      const redirectUrl = process.env.FRONTEND_BASE_URL + "/auth-success";
+      res.redirect(redirectUrl);
     } catch (err) {
       next(err);
     }
   })(req, res, next);
 });
+
 
 // Facebook Authentication Routes
 router.post("/facebook", async (req, res) => {
