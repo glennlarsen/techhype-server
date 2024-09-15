@@ -45,22 +45,19 @@ app.set("trust proxy", 1); // trust first proxy
 
 const corsOptions = {
   origin: [
+    "https://localhost:3000",
     "http://localhost:3000",
-    "https://localhost:3001",
-    "https://localhost:3002",
     "https://techhype.netlify.app",
     "https://techhype.no",
     "https://techhype-server-06db1c82ee3e.herokuapp.com",
   ],
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 };
 
-app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
