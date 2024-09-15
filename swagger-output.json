@@ -58,51 +58,6 @@
         }
       }
     },
-    "/auth/login": {
-      "get": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      },
-      "post": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "email": {
-                  "example": "any"
-                },
-                "password": {
-                  "example": "any"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/auth/callback": {
-      "get": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/auth/signup": {
       "post": {
         "description": "",
@@ -136,18 +91,24 @@
         }
       }
     },
-    "/auth/verify/{token}": {
-      "get": {
-        "tags": [
-          "Auth"
-        ],
-        "description": "Verifies the token sent to the user's email.",
+    "/auth/login": {
+      "post": {
+        "description": "",
         "parameters": [
           {
-            "name": "token",
-            "in": "path",
-            "required": true,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                }
+              }
+            }
           }
         ],
         "responses": {
@@ -215,12 +176,12 @@
         }
       }
     },
-    "/auth/resetpassword/{token}": {
+    "/auth/resetpassword/{oobCode}": {
       "post": {
         "description": "",
         "parameters": [
           {
-            "name": "token",
+            "name": "oobCode",
             "in": "path",
             "required": true,
             "type": "string"
@@ -245,27 +206,7 @@
         }
       }
     },
-    "/auth/google": {
-      "get": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/auth/google/callback": {
-      "get": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/auth/facebook": {
+    "/auth/update-verification-status": {
       "post": {
         "description": "",
         "parameters": [
@@ -275,7 +216,10 @@
             "schema": {
               "type": "object",
               "properties": {
-                "accessToken": {
+                "firebaseUID": {
+                  "example": "any"
+                },
+                "verified": {
                   "example": "any"
                 }
               }
@@ -297,13 +241,17 @@
     },
     "/users/": {
       "get": {
-        "tags": [
-          "User"
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
         ],
-        "description": "Get the logged in user.",
         "responses": {
-          "default": {
-            "description": ""
+          "401": {
+            "description": "Unauthorized"
           }
         }
       }
@@ -312,6 +260,11 @@
       "put": {
         "description": "",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
           {
             "name": "body",
             "in": "body",
@@ -329,8 +282,8 @@
           }
         ],
         "responses": {
-          "default": {
-            "description": ""
+          "401": {
+            "description": "Unauthorized"
           }
         }
       }

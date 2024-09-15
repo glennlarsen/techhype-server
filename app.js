@@ -9,12 +9,10 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var db = require("./models");
-const passport = require('passport');
-require('./config/passport-config');
+const firebaseAdmin = require("firebase-admin");
 
 const swaggerUi = require("swagger-ui-express");
 const swaggerFile = require("./swagger-output.json");
-const bodyParser = require("body-parser");
 
 var indexRouter = require("./routes/index");
 var authRouter = require("./routes/auth");
@@ -30,6 +28,15 @@ db.sequelize.sync({ force: false })
   })
   .catch((err) => {
     console.error("Database synchronization error:", err);
+  });
+
+  // Firebase Admin Initialization
+  firebaseAdmin.initializeApp({
+    credential: firebaseAdmin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    }),
   });
 
 var app = express();
@@ -52,6 +59,7 @@ const corsOptions = {
   credentials: true,
 };
 
+app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(logger("dev"));
 app.use(express.json());
@@ -59,7 +67,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(bodyParser.json());
+//app.use(bodyParser.json());
 
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
@@ -81,8 +89,7 @@ app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  res.status(err.status || 500);
-  res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+  res.status(err.status || 500).json({ status: 'error', message: err.message || 'Internal Server Error' });
 });
 
 module.exports = app;

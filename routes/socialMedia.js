@@ -10,8 +10,6 @@ var jsend = require("jsend");
 
 router.use(jsend.middleware);
 
-// Authenticate with JWT for all routes in this router
-router.use(passport.authenticate('jwt', { session: false }));
 
 // GET endpoint to retrieve the social media links for a card profile
 router.get("/:profileId", async (req, res) => {

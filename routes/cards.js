@@ -1,7 +1,5 @@
 var express = require("express");
 var router = express.Router();
-const passport = require("passport");
-const authMiddleware = require("./middleware/authMiddleware");
 const generateCardUrl = require("./middleware/generateCardUrl");
 const uploadImage = require("./middleware/uploadImage");
 var db = require("../models");
@@ -12,9 +10,6 @@ var cardProfileService = new CardProfileService(db);
 var jsend = require("jsend");
 
 router.use(jsend.middleware);
-
-// Authenticate with JWT for all routes in this router
-router.use(passport.authenticate('jwt', { session: false }));
 
 
 // GET endpoint to retrieve Cards for a specific user

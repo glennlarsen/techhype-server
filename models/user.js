@@ -2,6 +2,11 @@ module.exports = (sequelize, Sequelize) => {
   const User = sequelize.define(
     "User",
     {
+      FirebaseUID: {
+        type: Sequelize.DataTypes.STRING(255),
+        allowNull: false,
+        unique: true,
+      },
       FirstName: {
         type: Sequelize.DataTypes.STRING(255),
         allowNull: false,
@@ -15,21 +20,13 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
         unique: true,
       },
-      EncryptedPassword: {
-        type: Sequelize.DataTypes.BLOB,
-        allowNull: true, // Allow null for Facebook login
-      },
-      Salt: {
-        type: Sequelize.DataTypes.BLOB,
-        allowNull: true, // Allow null for Facebook login
-      },
       Role: {
         type: Sequelize.DataTypes.STRING(50),
         defaultValue: "User",
       },
       Verified: {
         type: Sequelize.DataTypes.BOOLEAN,
-        defaultValue: false, // Initially, email is not verified
+        defaultValue: false,
       },
     },
     {

@@ -3,6 +3,7 @@ var router = express.Router();
 const passport = require("passport");
 var db = require("../models");
 var UserService = require("../services/UserService");
+var authenticateToken = require("./middleware/authMiddleware");
 var userService = new UserService(db);
 var bodyParser = require("body-parser");
 var jsonParser = bodyParser.json();
@@ -10,29 +11,33 @@ var jsend = require("jsend");
 
 router.use(jsend.middleware);
 
-// Authenticate with JWT for all routes in this router
-router.use(passport.authenticate('jwt', { session: false }));
 
 /* GET users listing. */
-router.get("/", async (req, res, next) => {
-  console.log("cookies from get users: ",req.cookies);
+// Use Firebase authentication middleware
+router.get("/", authenticateToken, async (req, res, next) => {
+  console.log("User info from Firebase: ", req.user);
 
-  // #swagger.tags = ['User']
-  // #swagger.description = "Get the logged in user."
   try {
-    const userId = req.user?.user?.dataValues?.id ?? 0;
+    const userId = req.user?.uid; // Firebase ID is in `uid`
+    if (!userId) {
+      return res.jsend.fail({
+        statusCode: 401,
+        message: "User not authenticated.",
+      });
+    }
+
     const user = await userService.getOne(userId);
     if (user.success) {
-      res.jsend.success({ statusCode: 200, result: user });
+      return res.jsend.success({ statusCode: 200, result: user });
     } else {
-      res.jsend.fail({
+      return res.jsend.fail({
         statusCode: 404,
         message: user.message,
         error: user.error,
       });
     }
   } catch (error) {
-    res.jsend.error({
+    return res.jsend.error({
       statusCode: 500,
       message: "An error occurred while fetching users",
       data: error.message,
@@ -41,9 +46,16 @@ router.get("/", async (req, res, next) => {
 });
 
 // PUT endpoint to update user's first name and last name
-router.put("/update", jsonParser, async (req, res) => {
-  const userId = req.user?.user?.dataValues?.id ?? 0; // Assuming you have middleware to authenticate and add user info
+router.put("/update", jsonParser, authenticateToken, async (req, res) => {
+  const userId = req.user?.uid; // Firebase ID is in `uid`
   const { firstName, lastName } = req.body;
+
+  if (!userId) {
+    return res.jsend.fail({
+      statusCode: 401,
+      message: "User not authenticated.",
+    });
+  }
 
   if (!firstName && !lastName) {
     return res.jsend.fail({
@@ -54,26 +66,20 @@ router.put("/update", jsonParser, async (req, res) => {
 
   if (firstName && !/^[\p{L} '\-]{2,30}$/u.test(firstName)) {
     return res.jsend.fail({
-        statusCode: 400,
-        message: "Invalid first name.",
+      statusCode: 400,
+      message: "Invalid first name.",
     });
-}
+  }
 
-if (lastName && !/^[\p{L} '\-]{2,30}$/u.test(lastName)) {
+  if (lastName && !/^[\p{L} '\-]{2,30}$/u.test(lastName)) {
     return res.jsend.fail({
-        statusCode: 400,
-        message: "Invalid last name.",
+      statusCode: 400,
+      message: "Invalid last name.",
     });
-}
-
-  
+  }
 
   try {
-    const updatedUser = await userService.updateUserNames(
-      userId,
-      firstName,
-      lastName
-    );
+    const updatedUser = await userService.updateUserNames(userId, firstName, lastName);
     if (updatedUser.success) {
       return res.jsend.success({
         statusCode: 200,
@@ -94,5 +100,6 @@ if (lastName && !/^[\p{L} '\-]{2,30}$/u.test(lastName)) {
     });
   }
 });
+
 
 module.exports = router;

@@ -11,7 +11,7 @@ class UserService {
   }
 
   async create(
-    firstName, lastName, email, hashedPassword = null, salt = null, verified = false, verificationToken = null, expirationTime = null
+    firstName, lastName, email, firebaseUID, verified = false
   ) {
     try {
     console.log("first name:", firstName);
@@ -20,17 +20,9 @@ class UserService {
       FirstName: firstName,
       LastName: lastName,
       Email: email,
-      EncryptedPassword: hashedPassword,
-      Salt: salt,
-      Verified: verified // Set verified to true for Facebook users and google
+      FirebaseUID: firebaseUID, // Save Firebase UID
+      Verified: verified // Set verified status
     });
-
-  
-    // Now, create a corresponding verification token if needed
-    if (verificationToken && expirationTime) {
-      const token = await this.createToken(user.id, verificationToken, expirationTime);
-      // Optionally associate the token with the user if your design requires it
-    }
 
     // Return the user (or other relevant information) if needed
     return user;
@@ -95,93 +87,23 @@ class UserService {
     });
   }
 
-  async createToken(userId, verificationToken, expirationTime) {
-    const token = await this.Token.create({
-      UserId: userId, // Associate the token with the user
-      Token: verificationToken,
-      Expiration: expirationTime,
-    });
-
-    return token;
-  }
-
-  async verifyToken(token) {
-    // Find the token in the Token table
-    const tokenRecord = await this.Token.findOne({
-      where: {
-        Token: token,
-        Expiration: {
-          [Sequelize.Op.gt]: new Date(),
-        },
-      },
-      include: [{ model: this.User }],
-    });
-
-    if (tokenRecord) {
-      return tokenRecord.User; // Return the associated user
-    } else {
-      return null; // Token not found or has expired
-    }
-  }
-
-  async getToken(token) {
-    // Find the token in the Token table
-    const tokenRecord = await this.Token.findOne({
-      where: {
-        Token: token,
-        Expiration: {
-          [Sequelize.Op.gt]: new Date(),
-        },
-      },
-    });
-
-    if (tokenRecord) {
-      return tokenRecord; // Return the token
-    } else {
-      return null; // Token not found or has expired
-    }
-  }
-
-  async getUserFromToken(token) {
+  async updateUserVerified(firebaseUID, verified) {
     try {
-      // Find the token in the Token model
-      const tokenRecord = await this.Token.findOne({
-        where: {
-          Token: token,
-        },
+      const user = await this.User.findOne({
+        where: { FirebaseUID: firebaseUID }
       });
 
-      if (tokenRecord) {
-        // Get the associated user from the User model
-        const user = await this.User.findByPk(tokenRecord.UserId);
-        return user; // Return the associated user
-      } else {
-        return null; // Token not found
+      if (!user) {
+        return { success: false, message: "User not found" };
       }
-    } catch (error) {
-      console.error("Error getting user from token:", error);
-      return null; // An error occurred while getting the user from the token
-    }
-  }
 
-  async clearToken(token) {
-    try {
-      // Find the token in the Token model
-      const tokenRecord = await this.Token.findOne({
-        where: {
-          Token: token,
-        },
-      });
+      user.Verified = verified;
+      await user.save();
 
-      if (tokenRecord) {
-        await tokenRecord.destroy(); // Delete the token
-        return true; // Token cleared successfully
-      } else {
-        return false; // Token not found
-      }
+      return { success: true, message: "User verification status updated" };
     } catch (error) {
-      console.error("Error clearing reset token:", error);
-      return false; // An error occurred while clearing the token
+      console.error("Error updating user verification status:", error);
+      throw error;
     }
   }
 

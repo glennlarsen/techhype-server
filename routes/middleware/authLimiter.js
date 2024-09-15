@@ -1,3 +1,4 @@
+/*
 const rateLimit = require("express-rate-limit");
 
 // Define a rate limit configuration
@@ -8,3 +9,4 @@ const authLimiter = rateLimit({
 });
 
 module.exports = authLimiter;
+*/
